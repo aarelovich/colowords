@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
 
     private GameScreen gameScreen;
     private CrossWordGenerator crosswordGenerator;
+    private CrossWordGrid cwg;
     private String language;
 
     @Override
@@ -41,13 +42,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(this.gameScreen);
 
 
-        // Creating the crossword generator.
+        // Creating the crossword generator and generating the first puzzle.
         this.crosswordGenerator = new CrossWordGenerator();
         this.crosswordGenerator.setWordList(this.loadWordFile());
         this.crosswordGenerator.generateNewWordSet(7,10);
 
         // Setting the letters of the puzzle.
         this.gameScreen.setLetters(this.crosswordGenerator.getLetterList());
+
+        // And now we use the words to generate the word representation.
+        cwg = new CrossWordGrid();
+        cwg.placeWords(this.crosswordGenerator.getGeneratedWordList());
+
+        System.err.println("SOLUTION");
+        System.err.println(cwg.getStringRepresentation());
+
+        this.gameScreen.setNewCrossWord(cwg);
 
     }
 

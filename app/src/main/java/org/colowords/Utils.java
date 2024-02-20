@@ -16,7 +16,8 @@ public class Utils {
     static final int SHUFFLE_BUTTON_NOT_PRESSED = Color.parseColor("#4D5860");
     static final int SHUFFLE_BUTTON_PRESSED = Color.parseColor("#DFE0B3");
     static final int TRANSPARENT = Color.argb(0, 255, 0, 0);
-    static final int SQUARE_BKG = Color.parseColor("#BF471A");
+    //static final int SQUARE_BKG = Color.parseColor("#BF471A");
+    static final int SQUARE_BKG = Color.parseColor("#ffffff");
     static final int SQUARE_LETTER = Color.parseColor("#F3A8B1");
     static final int FORMED_WORD_LETTER = Color.parseColor("#ffffff");
     static final int FORMED_WORD_BKG = Color.parseColor("#E92039");

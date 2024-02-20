@@ -17,7 +17,7 @@ public class Letter {
     private int d;
     private int R;
     private float textYBaseLine;
-    private boolean letterWheel;
+    private boolean gridLetter;
     private boolean letterShown;
     private static Paint LetterWheelPaint = new Paint();
     private static Paint LetterSquarePaint = new Paint();
@@ -29,7 +29,7 @@ public class Letter {
         this.d = 0;
         this.textYBaseLine = this.y;
         this.selectionOrder = -1;
-        this.letterWheel = forLetterWheel;
+        this.gridLetter = !forLetterWheel;
         this.letterShown = false;
     }
 
@@ -51,11 +51,17 @@ public class Letter {
         LetterSquarePaint.setTextAlign(Paint.Align.CENTER);
         Typeface font = Typeface.create("Mono",Typeface.BOLD);
         LetterSquarePaint.setTypeface(font);
-        LetterSquarePaint.setTextSize(Utils.GetTextSizeToFitRect("A",side,side,LetterWheelPaint));
+        LetterSquarePaint.setTextSize(Utils.GetTextSizeToFitRect("A",side,side,LetterSquarePaint));
     }
 
     public void computeTextYBaseLine(){
         Rect textBounds = new Rect();
+        if (this.gridLetter){
+            LetterSquarePaint.getTextBounds(this.letter, 0, this.letter.length(), textBounds);
+        }
+        else {
+            LetterWheelPaint.getTextBounds(this.letter, 0, this.letter.length(), textBounds);
+        }
         LetterWheelPaint.getTextBounds(this.letter, 0, this.letter.length(), textBounds);
         float textHeight = textBounds.height();
         this.textYBaseLine  = this.y + textHeight/2f;
@@ -107,7 +113,7 @@ public class Letter {
         Paint bkgPaint = new Paint();
         bkgPaint.setStyle(Paint.Style.FILL);
 
-        if (letterWheel){
+        if (!gridLetter){
             if (this.selectionOrder >= 0){
                 // The letter is selected
                 bkgPaint.setColor(Utils.LINE_COLOR);
@@ -123,11 +129,11 @@ public class Letter {
             canvas.drawText(this.letter,this.x,this.textYBaseLine, LetterWheelPaint);
         }
         else {
-
             bkgPaint.setColor(Utils.SQUARE_BKG);
             float r = this.R*0.1f;
             canvas.drawRoundRect(this.x - this.R,this.y - this.R,this.x + this.R,this.y + this.R,r,r,bkgPaint);
-
+            //canvas.drawText(this.letter,this.x,this.textYBaseLine, LetterSquarePaint);
+            canvas.drawText(this.letter,this.x,this.textYBaseLine, LetterWheelPaint);
         }
 
 

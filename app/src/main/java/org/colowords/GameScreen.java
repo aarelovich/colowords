@@ -3,6 +3,7 @@ package org.colowords;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -15,6 +16,7 @@ public class GameScreen extends View {
     private LetterWheel letterWheel;
     private LetterGrid letterGrid;
     private CurrentWord currentWord;
+    private Rect letterGridGeometry;
 
     public GameScreen(Context context, int width, int height) {
         super(context);
@@ -38,8 +40,14 @@ public class GameScreen extends View {
         int h = (int)(height*0.4f);
         x = (width - w)/2;
         y = (int)(0.15f*height);
-        this.letterGrid = new LetterGrid(x,y,w,h,14);
 
+        this.letterGridGeometry = new Rect(x,y,x+w,y+h); // The geometry is necessary with every configuration.
+        this.letterGrid = new LetterGrid();
+
+    }
+
+    public void setNewCrossWord(CrossWordGrid cwg){
+        this.letterGrid.configureGrid(this.letterGridGeometry,cwg.getDimensions(),cwg.getCrossWord());
     }
 
     public void setLetters(ArrayList<String> letters){

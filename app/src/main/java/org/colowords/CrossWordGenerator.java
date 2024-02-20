@@ -2,8 +2,7 @@ package org.colowords;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 public class CrossWordGenerator {
 
@@ -29,6 +28,10 @@ public class CrossWordGenerator {
             ans.add("" + c);
         }
         return ans;
+    }
+
+    public List<String> getGeneratedWordList(){
+        return this.wordList;
     }
 
     public void setWordList(ArrayList<String> word_list){
@@ -73,7 +76,6 @@ public class CrossWordGenerator {
         System.err.println("Final Letter List: " + this.letterList.toString());
         System.err.println("Final String List: " + this.wordList.toString());
         System.err.println("Extra Word List: " + this.extraWords.toString());
-
 
     }
 
