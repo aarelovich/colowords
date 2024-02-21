@@ -22,6 +22,9 @@ public class MainActivity extends AppCompatActivity {
     private CrossWordGrid cwg;
     private String language;
 
+    private final int MAX_WORD_SIZE = 7;
+    private final int MAX_N_WORDS   = 15;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -37,45 +40,23 @@ public class MainActivity extends AppCompatActivity {
 
         //System.err.println("Device Metrics: " + width + "x" + height);
 
-        this.gameScreen = new GameScreen(this,width,height);
-        //setContentView(R.layout.activity_main);
+        this.gameScreen = new GameScreen(this,width,height,this.getFilesDir());
         setContentView(this.gameScreen);
-
 
         // Creating the crossword generator and generating the first puzzle.
         this.crosswordGenerator = new CrossWordGenerator();
         this.crosswordGenerator.setWordList(this.loadWordFile());
-        this.crosswordGenerator.generateNewWordSet(7,10);
 
         // Setting the letters of the puzzle.
         this.gameScreen.setLetters(this.crosswordGenerator.getLetterList());
 
         // And now we use the words to generate the word representation.
         cwg = new CrossWordGrid();
-        cwg.placeWords(this.crosswordGenerator.getGeneratedWordList());
 
-        System.err.println("SOLUTION");
-        System.err.println(cwg.getStringRepresentation());
-
-        this.gameScreen.setNewCrossWord(cwg);
+        this.gameScreen.reloadState();
 
     }
 
-//    @Override
-//    public boolean onTouchEvent(MotionEvent event){
-//        int action = event.getActionMasked();
-//
-//        System.err.println("On touch even main activity");
-//
-//        switch(action) {
-//            case MotionEvent.ACTION_UP:
-//                this.crosswordGenerator.generateNewWordSet(7,10);
-//                this.gameScreen.setLetters(this.crosswordGenerator.getLetterList());
-//                this.gameScreen.fingerUp(0,0);
-//                break;
-//        }
-//        return true;
-//    }
 
     /**
      * Loads the word list for the specified language.
@@ -113,5 +94,17 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    private void makeNewPuzzle(){
+        boolean found = false;
+        while (!found){
+            this.crosswordGenerator.generateNewWordSet(MAX_WORD_SIZE,MAX_N_WORDS);
+        }
+
+        this.gameScreen.setLetters(this.crosswordGenerator.getLetterList());
+        cwg.placeWords(this.crosswordGenerator.getGeneratedWordList());
+        this.gameScreen.setNewCrossWord(cwg);
+        System.err.println("SOLUTION");
+        System.err.println(cwg.getStringRepresentation());
+    }
 
 }

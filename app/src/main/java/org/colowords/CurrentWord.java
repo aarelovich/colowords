@@ -11,19 +11,10 @@ public class CurrentWord {
     private int y;
     private String word;
     private Paint wordPaint;
-    public CurrentWord(int x, int y, float text_size){
+    public CurrentWord(int x, int y){
         this.word = "";
         this.x = x; // The xvalue is considered to be the CENTER of where the word will appear.
         this.y = y;
-
-        this.wordPaint = new Paint();
-        this.wordPaint.setStyle(Paint.Style.FILL);
-        this.wordPaint.setTextAlign(Paint.Align.CENTER);
-        Typeface font = Typeface.create("Mono",Typeface.BOLD);
-        this.wordPaint.setTypeface(font);
-        this.wordPaint.setTextSize(text_size);
-        this.wordPaint.setColor(Utils.FORMED_WORD_LETTER);
-
     }
 
     public void setWord(String w){
@@ -34,6 +25,17 @@ public class CurrentWord {
         this.word = "";
     }
 
+    public void configureCurrentWordPaint(float text_size){
+
+        this.wordPaint = new Paint();
+        this.wordPaint.setStyle(Paint.Style.FILL);
+        this.wordPaint.setTextAlign(Paint.Align.CENTER);
+        Typeface font = Typeface.create("Mono",Typeface.BOLD);
+        this.wordPaint.setTypeface(font);
+        this.wordPaint.setTextSize(text_size);
+        this.wordPaint.setColor(Utils.FORMED_WORD_LETTER);
+
+    }
     public void render(Canvas canvas){
 
         if (this.word == "") return;

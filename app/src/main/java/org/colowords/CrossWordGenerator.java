@@ -106,31 +106,6 @@ public class CrossWordGenerator {
 
     }
 
-    /**
-     * Generates a distribution of how many words of each length we need, randomly, based on total required.
-     * @param Number of words to distribute
-     * @param max_length The max length of the words.
-     * @return The map of how many words of each length to generate.
-     */
-    private HashMap<Integer,Integer> generateWordLengthComposition(int N, int max_length){
-        HashMap<Integer,Integer> map = new HashMap<>();
-
-        // We initialize the map.
-        for (int i = MIN_WORD_LENGTH; i <= max_length; i++){
-            map.put(i,0);
-        }
-
-        int n = N;
-
-        while (n > 0){
-            int new_length = Utils.GetRandomInteger(MIN_WORD_LENGTH,max_length);
-            map.put(new_length,map.get(new_length) + 1);
-            n--;
-        }
-
-        return map;
-    }
-
     private ArrayList<String> findRandomWords(int word_length, int n_words){
 
         ArrayList<String> possibleWords = new ArrayList<>();

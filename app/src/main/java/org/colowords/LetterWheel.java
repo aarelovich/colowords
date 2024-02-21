@@ -32,7 +32,6 @@ public class LetterWheel {
         this.linePoints = new ArrayList<Point>();
         this.letterDiameter = this.diameter/4;
         this.wordFormed = "";
-        Letter.ConfigurePaintForLetterWheel(this.letterDiameter);
         this.shuffleButtonPressed = false;
 
         // We now compute the rectangle that defines the shadow button.
@@ -139,11 +138,11 @@ public class LetterWheel {
             x = this.center_x + x;
             y = this.center_y - y; // This is - because a negative value of y is actually a LARGER value of screen y.
 
-            // System.err.println("Letter " + letters.get(i) + " @ (" + x + "," + y + "), D: " + letterDiameter);
+            System.err.println("Letter " + letters.get(i) + " @ (" + x + "," + y + "), D: " + letterDiameter);
 
             letter.setGeometry(x,y,letterDiameter);
             letter.setLetter(letters.get(i));
-            letter.computeTextYBaseLine();
+            //letter.computeTextYBaseLine();
 
             this.letters.add(letter);
         }

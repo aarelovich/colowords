@@ -156,15 +156,6 @@ public class CrossWordGrid {
       // WE need to sort the words by size. IN this way we attempt to place the longest words first, which are the hardest to place. 
       wordList = this.sortStringListByLength(wordList);
       System.err.println("Sorted input word list: " + wordList);
-      // if (wordList.size() > 1) return true;
-
-      // // The seed word will be the longest word. So we search for that. 
-      // int longestWordIndex = 0;
-      // for (int i = 1; i < wordList.size(); i++){
-      //    if (wordList.get(i).length() > wordList.get(longestWordIndex).length()){
-      //       longestWordIndex = i;
-      //    }
-      // }
 
       // To start we place the seed word. 
       String startingWord = wordList.remove(0);
@@ -172,6 +163,7 @@ public class CrossWordGrid {
       // Randomly select whether the word is horizontal or not. 
       boolean horizontal = ((int)(Math.random()*2) == 1);
       if (GEN_DEBUG) horizontal = true;
+      horizontal = true;
       
       // And compute the starting position. 
       GridPoint starting_pos = this.gridSize.getStartingPosition(startingWord.length(), horizontal);

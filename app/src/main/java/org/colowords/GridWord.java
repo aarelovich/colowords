@@ -9,11 +9,47 @@ public class GridWord {
    private int row;
    private int column;
 
+   // Store indexes
+   private final int STATE_INDEX_ROW = 0;
+   private final int STATE_INDEX_COL = 1;
+   private final int STATE_INDEX_ORIENTATION = 2;
+   private final int STATE_INDEX_WORD = 3;
+   private final int STATE_SIZE = 4;
+
    public GridWord(String w, int r, int c, boolean h){
       this.word = w;
       this.column = c;
       this.row = r;
       this.horizontal = h;
+   }
+
+   public GridWord(String state){
+      String[] parts = state.split("|");
+      if (parts.length != STATE_SIZE){
+         System.err.println("Failed restoring GridWord state from string '" + state + "'. Number of parts " + parts.length + " instead of " + STATE_SIZE);
+         return;
+      }
+
+      this.word = parts[STATE_INDEX_WORD];
+      this.horizontal = Boolean.valueOf(parts[STATE_INDEX_ORIENTATION]);
+      this.row = Integer.valueOf(parts[STATE_INDEX_ROW]);
+      this.column = Integer.valueOf(parts[STATE_INDEX_COL]);
+
+   }
+
+   public String getStoreString() {
+
+      List<String> state = new ArrayList<>();
+      for (int i = 0; i < STATE_SIZE; i++){
+         state.add("");
+      }
+
+      state.set(STATE_INDEX_WORD,word);
+      state.set(STATE_INDEX_ROW,Integer.toString(row));
+      state.set(STATE_INDEX_COL,Integer.toString(column));
+      state.set(STATE_INDEX_ORIENTATION,Boolean.toString(horizontal));
+
+      return String.join("|",state);
    }
 
    public String toString() {

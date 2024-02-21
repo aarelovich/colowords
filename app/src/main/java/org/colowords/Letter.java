@@ -1,14 +1,22 @@
 package org.colowords;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import kotlinx.coroutines.selects.WhileSelectKt;
 
 public class Letter {
+
+    private static final int LETTER_STATE_HIDDEN   = 0;
+    private static final int LETTER_STATE_HINTED   = 1;
+    private static final int LETTER_STATE_REVEALED = 2;
 
     private String letter;
     private int selectionOrder;
@@ -18,10 +26,21 @@ public class Letter {
     private int R;
     private float textYBaseLine;
     private boolean gridLetter;
-    private boolean letterShown;
-    private static Paint LetterWheelPaint = new Paint();
-    private static Paint LetterSquarePaint = new Paint();
+    private int letterState;
+    private Paint letterPaint;
     private static float WheelLetterSize;
+
+    // State indexes
+    private final int STATE_INDEX_X      = 0;
+    private final int STATE_INDEX_Y      = 1;
+    private final int STATE_INDEX_LETTER = 2;
+    private final int STATE_INDEX_D      = 3;
+    private final int STATE_INDEX_STATE  = 4;
+    private final int STATE_INDEX_ISGRID = 5;
+    private final int STATE_INDEX_SEL     = 6;
+    private final int STATE_SIZE          = 7;
+
+
     public Letter (boolean forLetterWheel){
         this.x = 0;
         this.y = 0;
@@ -30,41 +49,28 @@ public class Letter {
         this.textYBaseLine = this.y;
         this.selectionOrder = -1;
         this.gridLetter = !forLetterWheel;
-        this.letterShown = false;
+        this.letterState = LETTER_STATE_HIDDEN;
+        this.letterPaint = new Paint();
     }
 
-    public static void ConfigurePaintForLetterWheel(int diameter){
-        LetterWheelPaint.setStyle(Paint.Style.FILL);
-        LetterWheelPaint.setTextAlign(Paint.Align.CENTER);
-        Typeface font = Typeface.create("Mono",Typeface.BOLD);
-        LetterWheelPaint.setTypeface(font);
-        WheelLetterSize = Utils.GetTextSizeToFitRect("A",diameter,diameter,LetterWheelPaint);
-        LetterWheelPaint.setTextSize(WheelLetterSize);
-    }
+    public Letter (String letterState){
+        String[] parts = letterState.split("|");
 
-    public static float GetWheelLetterSize() {
-        return WheelLetterSize;
-    }
-
-    public static void ConfigurePaintForSquareLetters(int side){
-        LetterSquarePaint.setStyle(Paint.Style.FILL);
-        LetterSquarePaint.setTextAlign(Paint.Align.CENTER);
-        Typeface font = Typeface.create("Mono",Typeface.BOLD);
-        LetterSquarePaint.setTypeface(font);
-        LetterSquarePaint.setTextSize(Utils.GetTextSizeToFitRect("A",side,side,LetterSquarePaint));
-    }
-
-    public void computeTextYBaseLine(){
-        Rect textBounds = new Rect();
-        if (this.gridLetter){
-            LetterSquarePaint.getTextBounds(this.letter, 0, this.letter.length(), textBounds);
+        if (parts.length != STATE_SIZE){
+            System.err.println("Failed restoring GridSize state from string '" + letterState + "'. Number of parts " + parts.length + " instead of " + STATE_SIZE);
+            return;
         }
-        else {
-            LetterWheelPaint.getTextBounds(this.letter, 0, this.letter.length(), textBounds);
-        }
-        LetterWheelPaint.getTextBounds(this.letter, 0, this.letter.length(), textBounds);
-        float textHeight = textBounds.height();
-        this.textYBaseLine  = this.y + textHeight/2f;
+
+        this.x = Integer.valueOf(parts[STATE_INDEX_X]);
+        this.y = Integer.valueOf(parts[STATE_INDEX_Y]);
+        this.d = Integer.valueOf(parts[STATE_INDEX_D]);
+        this.letterState = Integer.valueOf(parts[STATE_INDEX_STATE]);
+        this.selectionOrder = Integer.valueOf(parts[STATE_INDEX_SEL]);
+        this.letter = parts[STATE_INDEX_LETTER];
+        this.gridLetter = Boolean.valueOf(parts[STATE_INDEX_ISGRID]);
+
+        this.setGeometry(this.x,this.y,this.d);
+
     }
 
     public void setSelectionOrder(int index){
@@ -74,10 +80,18 @@ public class Letter {
     public void setLetter(String letter){
         this.letter = letter;
         this.selectionOrder = -1;
+        this.computeTextYBaseLine();
     }
 
     public void revealLetter(){
-        this.letterShown = true;
+        this.letterState = LETTER_STATE_REVEALED;
+    }
+
+    public void hintLetter(){
+        // Can only hint the letter when it's hidden
+        if (this.letterState == LETTER_STATE_HIDDEN){
+            this.letterState = LETTER_STATE_HINTED;
+        }
     }
 
     public Point getPoint() {
@@ -95,10 +109,21 @@ public class Letter {
     }
 
     public void setGeometry(int x, int y, int d){
+
         this.x = x;
         this.y = y;
         this.d = d;
         this.R = d/2;
+
+        Typeface font = Typeface.create("Mono",Typeface.BOLD);
+        letterPaint.setStyle(Paint.Style.FILL);
+        letterPaint.setTextAlign(Paint.Align.CENTER);
+        letterPaint.setTypeface(font);
+        float size = Utils.GetTextSizeToFitRect("A",d,d,letterPaint);
+        letterPaint.setTextSize(size);
+        if (!this.gridLetter) {
+            WheelLetterSize = size;
+        }
         this.computeTextYBaseLine();
     }
 
@@ -111,32 +136,79 @@ public class Letter {
     public void render(Canvas canvas){
 
         Paint bkgPaint = new Paint();
-        bkgPaint.setStyle(Paint.Style.FILL);
 
         if (!gridLetter){
+            bkgPaint.setStyle(Paint.Style.FILL);
             if (this.selectionOrder >= 0){
                 // The letter is selected
                 bkgPaint.setColor(Utils.LINE_COLOR);
-                LetterWheelPaint.setColor(Utils.LETTER_COLOR_WITH_BKG);
+                letterPaint.setColor(Utils.LETTER_COLOR_WITH_BKG);
             }
             else {
                 // The letter is not selected
                 bkgPaint.setColor(Utils.TRANSPARENT);
-                LetterWheelPaint.setColor(Utils.LETTER_COLOR_NO_BKG);
+                letterPaint.setColor(Utils.LETTER_COLOR_NO_BKG);
             }
 
             canvas.drawCircle(this.x,this.y,this.d/2,bkgPaint);
-            canvas.drawText(this.letter,this.x,this.textYBaseLine, LetterWheelPaint);
+            canvas.drawText(this.letter,this.x,this.textYBaseLine, letterPaint);
         }
         else {
+
+            float r = (float)(this.R)*0.3f;
+            float strokeWidth = this.d*0.1f;
+
             bkgPaint.setColor(Utils.SQUARE_BKG);
-            float r = this.R*0.1f;
+            bkgPaint.setStyle(Paint.Style.FILL);
             canvas.drawRoundRect(this.x - this.R,this.y - this.R,this.x + this.R,this.y + this.R,r,r,bkgPaint);
-            //canvas.drawText(this.letter,this.x,this.textYBaseLine, LetterSquarePaint);
-            canvas.drawText(this.letter,this.x,this.textYBaseLine, LetterWheelPaint);
+
+            bkgPaint.setColor(Color.WHITE);
+            bkgPaint.setStyle(Paint.Style.STROKE);
+            bkgPaint.setStrokeWidth(strokeWidth);
+            canvas.drawRoundRect(this.x - this.R,this.y - this.R,this.x + this.R,this.y + this.R,r,r,bkgPaint);
+
+            if (this.letterState == LETTER_STATE_HIDDEN) return;
+
+            //this.letterShown = true;
+            if (this.letterState == LETTER_STATE_HINTED){
+                letterPaint.setColor(Utils.SQUARE_LETTER_HINTED);
+            }
+            else {
+                letterPaint.setColor(Utils.SQUARE_LETTER);
+            }
+
+            canvas.drawText(this.letter,this.x,this.textYBaseLine, letterPaint);
         }
 
 
+    }
+
+    public String getStoreString(){
+        List<String> state = new ArrayList<>();
+        for (int i = 0; i < STATE_SIZE; i++){
+            state.add("");
+        }
+
+        state.set(STATE_INDEX_X,Integer.toString(this.x));
+        state.set(STATE_INDEX_Y,Integer.toString(this.y));
+        state.set(STATE_INDEX_D,Integer.toString(this.d));
+        state.set(STATE_INDEX_SEL,Integer.toString(selectionOrder));
+        state.set(STATE_INDEX_STATE,Integer.toString(this.letterState));
+        state.set(STATE_INDEX_LETTER,this.letter);
+        state.set(STATE_INDEX_ISGRID,Boolean.toString(gridLetter));
+
+        return String.join("|",state);
+    }
+
+    public static float GetWheelLetterSize() {
+        return WheelLetterSize;
+    }
+
+    private void computeTextYBaseLine(){
+        Rect textBounds = new Rect();
+        this.letterPaint.getTextBounds("A", 0, this.letter.length(), textBounds);
+        float textHeight = textBounds.height();
+        this.textYBaseLine  = this.y + textHeight/2f;
     }
 
 }

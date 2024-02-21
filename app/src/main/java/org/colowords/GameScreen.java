@@ -7,21 +7,26 @@ import android.graphics.Rect;
 import android.view.MotionEvent;
 import android.view.View;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class GameScreen extends View {
 
-    private int WIDTH;
-    private int HEIGHT;
     private LetterWheel letterWheel;
     private LetterGrid letterGrid;
     private CurrentWord currentWord;
     private Rect letterGridGeometry;
+    private File storeLocation;
+    private final String appStateFile = "appstate.txt";
 
-    public GameScreen(Context context, int width, int height) {
+    public GameScreen(Context context, int width, int height, File whereToSave) {
         super(context);
-        this.WIDTH = width;
-        this.HEIGHT = height;
 
         // With these values we can now do the math for all elements.
         int x = width/2;
@@ -32,8 +37,7 @@ public class GameScreen extends View {
 
         // Now the current word
         y = y - d/2 -  (int)(0.02f*height);
-        this.currentWord = new CurrentWord(x,y,Letter.GetWheelLetterSize());
-
+        this.currentWord = new CurrentWord(x,y);
 
         // And the letter grid.
         int w = (int)(width*0.9f);
@@ -44,10 +48,13 @@ public class GameScreen extends View {
         this.letterGridGeometry = new Rect(x,y,x+w,y+h); // The geometry is necessary with every configuration.
         this.letterGrid = new LetterGrid();
 
+        this.storeLocation = whereToSave;
+
     }
 
     public void setNewCrossWord(CrossWordGrid cwg){
         this.letterGrid.configureGrid(this.letterGridGeometry,cwg.getDimensions(),cwg.getCrossWord());
+        this.currentWord.configureCurrentWordPaint(Letter.GetWheelLetterSize());
     }
 
     public void setLetters(ArrayList<String> letters){
@@ -81,6 +88,12 @@ public class GameScreen extends View {
     public void fingerUp(int x, int y){
         String word = this.letterWheel.fingerUp();
         this.currentWord.clear();
+
+        // We now check if the word is in the puzzle.
+        if (this.letterGrid.isWordInCrossWord(word)){
+            this.storeState();
+        }
+
         this.invalidate();
         //System.err.println("[DBUG] Word Formed: '" + word + "'");
     }
@@ -127,6 +140,39 @@ public class GameScreen extends View {
             case MotionEvent.ACTION_CANCEL:
                 break;
         }
+        return true;
+    }
+
+    public void storeState() {
+        String state = letterGrid.getStoreState();
+        try {
+            FileOutputStream fos = getContext().openFileOutput(this.appStateFile,Context.MODE_PRIVATE);
+            fos.write(state.getBytes(StandardCharsets.UTF_8));
+            fos.close();
+        }
+        catch (Exception e){
+            System.err.println("Failed to write the state. Reason: " + e.getMessage());
+        }
+        System.err.println("SAVED STATE");
+    }
+
+    public boolean reloadState(){
+
+        try {
+            FileInputStream fis = getContext().openFileInput(this.appStateFile);
+
+            InputStreamReader inputStreamReader = new InputStreamReader(fis, StandardCharsets.UTF_8);
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+            //StringBuilder stringBuilder = new StringBuilder();
+            String state = reader.readLine();
+            System.err.println("Loaded STATE: " + state);
+
+        }
+        catch (Exception e){
+            System.err.println("Unable to reload state Reason: " + e.getMessage());
+            return false;
+        }
+
         return true;
     }
 
