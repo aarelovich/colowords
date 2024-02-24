@@ -2,34 +2,25 @@ package org.colowords;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.graphics.Canvas;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
-import android.view.MotionEvent;
-import android.view.Window;
-import android.view.WindowManager;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     private GameScreen gameScreen;
     private CrossWordGenerator crosswordGenerator;
     private CrossWordGrid cwg;
-    private String language;
-
-    private final int MAX_WORD_SIZE = 7;
     private final int MAX_N_WORDS   = 15;
+    private final int MIN_N_WORDS   = 4;
+
+    public static HashMap<String,String> Dictionary;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        this.language = "en";
 
         // I use the device resolution for everything, so I get it first.
         // Then I use it for the game screen.
@@ -39,70 +30,81 @@ public class MainActivity extends AppCompatActivity {
         int width = displayMetrics.widthPixels;
 
         //System.err.println("Device Metrics: " + width + "x" + height);
+        Utils.LoadTypeFaces(getAssets());
 
-        this.gameScreen = new GameScreen(this,width,height,this.getFilesDir());
+        //Preferences.Save(this,Preferences.KEY_MAX_SCORE,"0");
+        this.gameScreen = new GameScreen(this, width, height, new GameScreen.NewGameListener() {
+            @Override
+            public void newGame() {
+                makeNewPuzzle();
+            }
+        });
         setContentView(this.gameScreen);
 
         // Creating the crossword generator and generating the first puzzle.
         this.crosswordGenerator = new CrossWordGenerator();
-        this.crosswordGenerator.setWordList(this.loadWordFile());
-
-        // Setting the letters of the puzzle.
-        this.gameScreen.setLetters(this.crosswordGenerator.getLetterList());
 
         // And now we use the words to generate the word representation.
-        cwg = new CrossWordGrid();
+        this.cwg = new CrossWordGrid();
 
+        // We load the current dictionary.
+        this.loadDictionaryCurrentLanguage();
+
+        // this.makeNewPuzzle();
         this.gameScreen.reloadState();
 
     }
 
 
-    /**
-     * Loads the word list for the specified language.
-     * @return
-     */
-    private ArrayList<String> loadWordFile(){
-
-        ArrayList<String> ans = new ArrayList<String>();
-
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new InputStreamReader(getAssets().open(this.language + "_words.txt")));
-
-            // do reading, usually loop until end of file reading
-            String word;
-            while ((word = reader.readLine()) != null) {
-                ans.add(word);
-            }
+    private void loadDictionaryCurrentLanguage(){
+        String language = Preferences.GetPreference(this,Preferences.KEY_LANGUAGE);
+        // language = "EN";
+        if (!LanguageDictionary.LoadDictionary(this,language.toLowerCase())){
+            System.err.println("Dictionary is not loaded. Cannot continue");
         }
-        catch (IOException e) {
-            System.err.println("Failed loading information from input stream. Reason " + e.getMessage());
-        }
-        finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                }
-                catch (IOException e) {
-                    System.err.println("Failed closing reader. Reason " + e.getMessage());
-                }
-            }
-        }
-
-        return ans;
-
     }
 
+
     private void makeNewPuzzle(){
-        boolean found = false;
-        while (!found){
-            this.crosswordGenerator.generateNewWordSet(MAX_WORD_SIZE,MAX_N_WORDS);
+
+        String difficulty_str = Preferences.GetPreference(this,Preferences.KEY_DIFFICULTY);
+        String max_score_str = Preferences.GetPreference(this,Preferences.KEY_MAX_SCORE);
+        String language = Preferences.GetPreference(this,Preferences.KEY_LANGUAGE);
+
+        int difficulty = Utils.MAX_WORD_SIZE;
+
+        if (!difficulty_str.isEmpty()){
+            difficulty = Integer.valueOf(difficulty_str);
         }
+
+        System.err.println("STARTING NEW GAME: Difficulty:  " + difficulty_str + ". Language: " + language + ". Max Score: " + max_score_str);
+        this.loadDictionaryCurrentLanguage();
+
+        // We prepare the cross word generator.
+        this.crosswordGenerator.setWordList(LanguageDictionary.GetWordList());
+
+        // We randomly generate games, until we get one with at least 4 words (usually 1 to 3 tries)
+        while (true){
+            this.crosswordGenerator.generateNewWordSet(difficulty,MAX_N_WORDS);
+            if (this.crosswordGenerator.getGeneratedWordList().size() > MIN_N_WORDS){ // We need a at least 4 words.
+                break;
+            }
+        }
+
+        // Then we set the letters of the puzzle.
+        this.gameScreen.setLetters(this.crosswordGenerator.getLetterList());
 
         this.gameScreen.setLetters(this.crosswordGenerator.getLetterList());
         cwg.placeWords(this.crosswordGenerator.getGeneratedWordList());
-        this.gameScreen.setNewCrossWord(cwg);
+
+        // Now we get the extra words.
+        List<String> wordsUnableToPlace  = this.cwg.getWordsUnableToPlace();
+        List<String> extraWords = this.crosswordGenerator.getExtraWords();
+        for (String s: wordsUnableToPlace){
+            extraWords.add(s);
+        }
+
+        this.gameScreen.setNewCrossWord(cwg,extraWords);
         System.err.println("SOLUTION");
         System.err.println(cwg.getStringRepresentation());
     }

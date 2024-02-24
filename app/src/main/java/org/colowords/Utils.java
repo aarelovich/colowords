@@ -1,11 +1,10 @@
 package org.colowords;
 
+import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.RectF;
+import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.util.Size;
-import android.util.SizeF;
 
 public class Utils {
     static final int BKG_COLOR = Color.parseColor("#472B31");
@@ -19,8 +18,55 @@ public class Utils {
     static final int SQUARE_LETTER_HINTED = Color.parseColor("#ffd299");
     static final int SQUARE_BKG = Color.parseColor("#541f0b");
     static final int SQUARE_LETTER = Color.parseColor("#F3A8B1");
+    static final int SQUARE_LETTER_PRESSED = Color.parseColor("#ffd299");
     static final int FORMED_WORD_LETTER = Color.parseColor("#ffffff");
     static final int FORMED_WORD_BKG = Color.parseColor("#E92039");
+    static final int EXTRA_IND_BKG = Color.parseColor("#d4eaf7");
+    static final int EXTRA_IND_LETTER = Color.parseColor("#3b3c3d");
+    static final int EXTRA_IND_FiLL = Color.parseColor("#00668c");
+    static final int EXTRA_SELECTED_BKG = Color.parseColor("#cccbc8");
+    static final int CIRCLE_SELECTOR_BKG_MAIN = Color.parseColor("#2E8B57");
+    static final int CIRCLE_SELECTOR_BKG_OPTION = Color.parseColor("#c6ffe6");
+    static final int CIRCLE_SELECTOR_TEXT_MAIN = Color.parseColor("#FFFFFF");
+    static final int CIRCLE_SELECTOR_TEXT_OPTION = Color.parseColor("#2d2d2d");
+    static final int BUTTON_TEXT_COLOR = Color.parseColor("#e0e0e0");
+    static final int BANNER_MAIN = Color.parseColor("#4a9d9c");
+    static final int BANNER_TEXT = Color.parseColor("#ffe0c8");
+
+    // Word size constants.
+    static final int MAX_WORD_SIZE = 7;
+    static final int MIN_WORD_SIZE = 3;
+
+    static final int ANIMATION_TICK_LENGTH= 20;
+
+    // The animation IDS.
+    static final int ANIMATION_ID_SCORE = 100;
+    static final int ANIMATION_ID_EXTRA = 200;
+    static final int ANIMATION_ID_BANNER = 300;
+
+    private static Typeface[] TYPEFACES;
+
+    public interface AnimationInterface {
+        public void startAnimation(int id);
+        public void stopAnimation(int id);
+    }
+
+
+    public static void LoadTypeFaces(AssetManager asm){
+        TYPEFACES = new Typeface[7];
+        for (int i = 0; i < TYPEFACES.length; i++){
+            String name = "0" + Integer.toString(i);
+            TYPEFACES[i] = Typeface.createFromAsset(asm,name + ".otf");
+        }
+    }
+
+    public static Typeface GetLetterTypeFace(){
+        return TYPEFACES[0];
+    }
+
+    public static Typeface GetElementTypeFace(){
+        return TYPEFACES[1];
+    }
 
     /**
      * I asked ChatGPT to write this code.
@@ -55,6 +101,20 @@ public class Utils {
         textSize *= scale;
 
         return textSize;
+    }
+
+    /**
+     * Computes the y position that I need to pass to the drawText function of the Canvas.
+     * @param text - The text to rencer.
+     * @param p - The paint object used on the tex. Importat that it has set the typeface and font size.
+     * @param y - The y position of the vertical center of the graphical element where the text needs to be shown.
+     * @return - The value for the baseline.
+     */
+    public static float GetTextBaseLine(String text, Paint p, int y) {
+        Rect textBounds = new Rect();
+        p.getTextBounds(text, 0, text.length(), textBounds);
+        float textHeight = textBounds.height();
+        return y + textHeight/2f;
     }
 
     public static int GetRandomInteger(int min, int max) {

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- dialog_layout.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:orientation="vertical">
+
+<!-- Title TextView -->
+<TextView
+    android:id="@+id/extraDialogTitle"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:text="Title"
+    android:textSize="20sp"
+    android:textColor="@android:color/black"
+    android:textStyle="bold"/>
+
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <!-- Left side: ListView -->
+        <ListView
+            android:id="@+id/extraDialogWordList"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:divider="@drawable/list_separator"
+            android:dividerHeight="2dp" />
+
+        <!-- Vertical Line -->
+        <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"/>
+
+        <!-- Right side: TextView -->
+        <ScrollView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:background="#d4eaf7">
+
+            <TextView
+                android:id="@+id/extraDialogDefinitionView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:padding="16dp"
+                android:text=""
+                android:textSize="16sp"/>
+        </ScrollView>
+</LinearLayout>
+
+<!-- Content TextView inside ScrollView -->
+
+
+</LinearLayout>

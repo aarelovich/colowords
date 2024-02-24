@@ -1,6 +1,7 @@
 package org.colowords;
 
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 public class GridSize {
@@ -17,9 +18,9 @@ public class GridSize {
    }
 
    public void restoreFromStringState(String state){
-      String[] parts = state.split("|");
+      String[] parts = state.split("\\|");
       if (parts.length != STATE_SIZE){
-         System.err.println("Failed restoring GridSize state from string '" + state + "'. Number of parts " + parts.length + " instead of " + STATE_SIZE);
+         System.err.println("Failed restoring GridSize state from string '" + state + "'. Number of parts " + parts.length + " instead of " + STATE_SIZE + ". " + parts);
          return;
       }
 
@@ -76,6 +77,12 @@ public class GridSize {
 
    public int toIndex(GridPoint gp){
       return this.toIndex(gp.r,gp.c);
+   }
+
+   public GridPoint fromIndex(int index){
+      int r = index/this.columns;
+      int c = index - r*this.columns;
+      return new GridPoint(r,c);
    }
 
    public int toIndex(int r, int c){

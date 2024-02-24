@@ -163,7 +163,7 @@ public class CrossWordGrid {
       // Randomly select whether the word is horizontal or not. 
       boolean horizontal = ((int)(Math.random()*2) == 1);
       if (GEN_DEBUG) horizontal = true;
-      horizontal = true;
+      //horizontal = true;
       
       // And compute the starting position. 
       GridPoint starting_pos = this.gridSize.getStartingPosition(startingWord.length(), horizontal);

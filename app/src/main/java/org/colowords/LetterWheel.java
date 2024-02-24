@@ -7,6 +7,7 @@ import android.graphics.Point;
 import android.graphics.RectF;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class LetterWheel {
 
@@ -99,6 +100,14 @@ public class LetterWheel {
         return this.shuffleButtonPressed;
     }
 
+    public List<String> getLetters(){
+        List<String> chars = new ArrayList<>();
+        for (Letter l: this.letters){
+            chars.add(l.getLetter());
+        }
+        return chars;
+    }
+
     public void setLetters(ArrayList<String> letters){
 
         // Create a new letters struct.
@@ -138,7 +147,7 @@ public class LetterWheel {
             x = this.center_x + x;
             y = this.center_y - y; // This is - because a negative value of y is actually a LARGER value of screen y.
 
-            System.err.println("Letter " + letters.get(i) + " @ (" + x + "," + y + "), D: " + letterDiameter);
+            // System.err.println("Letter " + letters.get(i) + " @ (" + x + "," + y + "), D: " + letterDiameter);
 
             letter.setGeometry(x,y,letterDiameter);
             letter.setLetter(letters.get(i));
@@ -210,6 +219,9 @@ public class LetterWheel {
         if (shuffleButtonPressed){
             // We do the shuffle.
             this.shuffle();
+            this.wordFormed = "";
+            this.shuffleButtonPressed = false;
+            return "";
         }
 
         // We checked if a word was formed.

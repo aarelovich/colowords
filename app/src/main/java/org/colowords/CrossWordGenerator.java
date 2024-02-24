@@ -30,14 +30,18 @@ public class CrossWordGenerator {
         return ans;
     }
 
+    public List<String> getExtraWords() {
+        return this.extraWords;
+    }
+
     public List<String> getGeneratedWordList(){
         return this.wordList;
     }
 
-    public void setWordList(ArrayList<String> word_list){
+    public void setWordList(String[] word_list){
         words.clear();
-        for (int i = 0; i < word_list.size(); i++){
-            String word = word_list.get(i);
+        for (int i = 0; i < word_list.length; i++){
+            String word = word_list[i];
             int l = word.length();
             if (!words.containsKey(l)){
                 words.put(l,new ArrayList<String>());
@@ -56,7 +60,7 @@ public class CrossWordGenerator {
         // We generate all possible words given the seed.
         for (int i = MIN_WORD_LENGTH; i <= max_length; i++){
             ArrayList<String> words_to_add = findRandomWords(i,9999 ); // I use 9999 as infinite so that hte parameter won't matter.
-            System.err.println("Words of length " + i + " and found " + words_to_add.size());
+            // System.err.println("Words of length " + i + " and found " + words_to_add.size());
             for (String w: words_to_add){
                 if (!this.wordList.contains(w)) this.wordList.add(w);
             }

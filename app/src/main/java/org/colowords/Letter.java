@@ -4,13 +4,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
-import android.graphics.Rect;
 import android.graphics.Typeface;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import kotlinx.coroutines.selects.WhileSelectKt;
 
 public class Letter {
 
@@ -28,18 +25,24 @@ public class Letter {
     private boolean gridLetter;
     private int letterState;
     private Paint letterPaint;
-    private static float WheelLetterSize;
+    private long fingerDownTime;
 
     // State indexes
-    private final int STATE_INDEX_X      = 0;
-    private final int STATE_INDEX_Y      = 1;
-    private final int STATE_INDEX_LETTER = 2;
-    private final int STATE_INDEX_D      = 3;
-    private final int STATE_INDEX_STATE  = 4;
-    private final int STATE_INDEX_ISGRID = 5;
-    private final int STATE_INDEX_SEL     = 6;
-    private final int STATE_SIZE          = 7;
+    private static final int STATE_INDEX_X      = 0;
+    private static final int STATE_INDEX_Y      = 1;
+    private static final int STATE_INDEX_LETTER = 2;
+    private static final int STATE_INDEX_D      = 3;
+    private static final int STATE_INDEX_STATE  = 4;
+    private static final int STATE_INDEX_ISGRID = 5;
+    private static final int STATE_INDEX_SEL     = 6;
+    private static final int STATE_SIZE          = 7;
+    private static final int LONG_PRESS_TIME     = 1000; // milliseconds.
+    private static final int SHORT_PRESS_TIME    = 30; // milliseconds.
 
+    // Press Types.
+    public static final int PRESS_NO_PRESS      = 0;
+    public static final int PRESS_SHORT         = 1;
+    public static final int PRESS_LONG          = 2;
 
     public Letter (boolean forLetterWheel){
         this.x = 0;
@@ -51,25 +54,30 @@ public class Letter {
         this.gridLetter = !forLetterWheel;
         this.letterState = LETTER_STATE_HIDDEN;
         this.letterPaint = new Paint();
+        this.fingerDownTime = -1;
     }
 
     public Letter (String letterState){
-        String[] parts = letterState.split("|");
+        String[] parts = letterState.split("\\|");
 
         if (parts.length != STATE_SIZE){
             System.err.println("Failed restoring GridSize state from string '" + letterState + "'. Number of parts " + parts.length + " instead of " + STATE_SIZE);
             return;
         }
 
-        this.x = Integer.valueOf(parts[STATE_INDEX_X]);
-        this.y = Integer.valueOf(parts[STATE_INDEX_Y]);
-        this.d = Integer.valueOf(parts[STATE_INDEX_D]);
-        this.letterState = Integer.valueOf(parts[STATE_INDEX_STATE]);
-        this.selectionOrder = Integer.valueOf(parts[STATE_INDEX_SEL]);
+        this.x = Integer.parseInt(parts[STATE_INDEX_X]);
+        this.y = Integer.parseInt(parts[STATE_INDEX_Y]);
+        this.d = Integer.parseInt(parts[STATE_INDEX_D]);
+        this.letterState = Integer.parseInt(parts[STATE_INDEX_STATE]);
+        this.selectionOrder = Integer.parseInt(parts[STATE_INDEX_SEL]);
         this.letter = parts[STATE_INDEX_LETTER];
-        this.gridLetter = Boolean.valueOf(parts[STATE_INDEX_ISGRID]);
+        this.gridLetter = Boolean.parseBoolean(parts[STATE_INDEX_ISGRID]);
+
+        this.letterPaint = new Paint();
 
         this.setGeometry(this.x,this.y,this.d);
+
+        this.fingerDownTime = -1;
 
     }
 
@@ -80,18 +88,11 @@ public class Letter {
     public void setLetter(String letter){
         this.letter = letter;
         this.selectionOrder = -1;
-        this.computeTextYBaseLine();
+        this.textYBaseLine = Utils.GetTextBaseLine("A",this.letterPaint,this.y);
     }
 
     public void revealLetter(){
         this.letterState = LETTER_STATE_REVEALED;
-    }
-
-    public void hintLetter(){
-        // Can only hint the letter when it's hidden
-        if (this.letterState == LETTER_STATE_HIDDEN){
-            this.letterState = LETTER_STATE_HINTED;
-        }
     }
 
     public Point getPoint() {
@@ -115,22 +116,27 @@ public class Letter {
         this.d = d;
         this.R = d/2;
 
-        Typeface font = Typeface.create("Mono",Typeface.BOLD);
         letterPaint.setStyle(Paint.Style.FILL);
         letterPaint.setTextAlign(Paint.Align.CENTER);
-        letterPaint.setTypeface(font);
+        letterPaint.setTypeface(Utils.GetLetterTypeFace());
         float size = Utils.GetTextSizeToFitRect("A",d,d,letterPaint);
         letterPaint.setTextSize(size);
-        if (!this.gridLetter) {
-            WheelLetterSize = size;
-        }
-        this.computeTextYBaseLine();
+        this.textYBaseLine = Utils.GetTextBaseLine("A",this.letterPaint,this.y);
     }
 
     public boolean isLetterBeingTouched(int x, int y){
         if ((x < this.x - R) || (x > this.x + R)) return false;
         if ((y < this.y - R) || (y > this.y + R) ) return false;
+
+        // Only grid letters can be pressed.
+        if (this.gridLetter){
+           this.fingerDownTime = System.currentTimeMillis();
+        }
         return true;
+    }
+
+    public boolean isItPressed() {
+        return (this.fingerDownTime != -1);
     }
 
     public void render(Canvas canvas){
@@ -150,7 +156,7 @@ public class Letter {
                 letterPaint.setColor(Utils.LETTER_COLOR_NO_BKG);
             }
 
-            canvas.drawCircle(this.x,this.y,this.d/2,bkgPaint);
+            canvas.drawCircle(this.x,this.y,this.R,bkgPaint);
             canvas.drawText(this.letter,this.x,this.textYBaseLine, letterPaint);
         }
         else {
@@ -158,7 +164,13 @@ public class Letter {
             float r = (float)(this.R)*0.3f;
             float strokeWidth = this.d*0.1f;
 
-            bkgPaint.setColor(Utils.SQUARE_BKG);
+            if (this.fingerDownTime != -1){
+                bkgPaint.setColor(Utils.SQUARE_LETTER_PRESSED);
+            }
+            else {
+                bkgPaint.setColor(Utils.SQUARE_BKG);
+            }
+
             bkgPaint.setStyle(Paint.Style.FILL);
             canvas.drawRoundRect(this.x - this.R,this.y - this.R,this.x + this.R,this.y + this.R,r,r,bkgPaint);
 
@@ -200,15 +212,39 @@ public class Letter {
         return String.join("|",state);
     }
 
-    public static float GetWheelLetterSize() {
-        return WheelLetterSize;
-    }
+    public int fingerUp(){
 
-    private void computeTextYBaseLine(){
-        Rect textBounds = new Rect();
-        this.letterPaint.getTextBounds("A", 0, this.letter.length(), textBounds);
-        float textHeight = textBounds.height();
-        this.textYBaseLine  = this.y + textHeight/2f;
+        if (!this.gridLetter) {
+            this.fingerDownTime = -1;
+            return PRESS_NO_PRESS; // Only grid letters are pressed.
+        }
+
+        if (this.fingerDownTime != -1){
+
+            long diff = System.currentTimeMillis() - this.fingerDownTime;
+            this.fingerDownTime = -1;
+
+            // System.err.println("LETTER-FINGER UP. Duration: " + diff);
+
+            if (diff >= LONG_PRESS_TIME) {
+                // If this is a grid letter,
+                // then this means we need to reveal the letter as a hint, assuming that is hidden.
+                if (this.letterState == LETTER_STATE_HIDDEN){
+                    this.letterState = LETTER_STATE_HINTED;
+                    return PRESS_LONG;
+                }
+                else {
+                    return PRESS_NO_PRESS; // WE do nothing.
+                }
+            }
+            else if (diff >= SHORT_PRESS_TIME) {
+                // Short press definition request.
+                return PRESS_SHORT;
+            }
+
+        }
+
+        return PRESS_NO_PRESS;
     }
 
 }

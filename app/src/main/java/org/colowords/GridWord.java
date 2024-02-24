@@ -8,6 +8,7 @@ public class GridWord {
    private boolean horizontal;
    private int row;
    private int column;
+   private boolean hidden; // The hidden flag is only used to mark hidden words to know if the name should be hidden in the definition look up.
 
    // Store indexes
    private final int STATE_INDEX_ROW = 0;
@@ -23,8 +24,16 @@ public class GridWord {
       this.horizontal = h;
    }
 
+   public void setHiddenFlag(boolean h){
+      this.hidden = h;
+   }
+
+   public boolean getHiddenFlag(){
+      return this.hidden;
+   }
+
    public GridWord(String state){
-      String[] parts = state.split("|");
+      String[] parts = state.split("\\|");
       if (parts.length != STATE_SIZE){
          System.err.println("Failed restoring GridWord state from string '" + state + "'. Number of parts " + parts.length + " instead of " + STATE_SIZE);
          return;
