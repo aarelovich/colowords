@@ -21,10 +21,8 @@ public class Letter {
     private int y;
     private int d;
     private int R;
-    private float textYBaseLine;
     private boolean gridLetter;
     private int letterState;
-    private Paint letterPaint;
     private long fingerDownTime;
 
     // State indexes
@@ -49,11 +47,9 @@ public class Letter {
         this.y = 0;
         this.letter = "";
         this.d = 0;
-        this.textYBaseLine = this.y;
         this.selectionOrder = -1;
         this.gridLetter = !forLetterWheel;
         this.letterState = LETTER_STATE_HIDDEN;
-        this.letterPaint = new Paint();
         this.fingerDownTime = -1;
     }
 
@@ -73,8 +69,6 @@ public class Letter {
         this.letter = parts[STATE_INDEX_LETTER];
         this.gridLetter = Boolean.parseBoolean(parts[STATE_INDEX_ISGRID]);
 
-        this.letterPaint = new Paint();
-
         this.setGeometry(this.x,this.y,this.d);
 
         this.fingerDownTime = -1;
@@ -88,7 +82,11 @@ public class Letter {
     public void setLetter(String letter){
         this.letter = letter;
         this.selectionOrder = -1;
-        this.textYBaseLine = Utils.GetTextBaseLine("A",this.letterPaint,this.y);
+
+    }
+
+    public void forceHintedState(){
+        this.letterState = LETTER_STATE_HINTED;
     }
 
     public void revealLetter(){
@@ -116,12 +114,6 @@ public class Letter {
         this.d = d;
         this.R = d/2;
 
-        letterPaint.setStyle(Paint.Style.FILL);
-        letterPaint.setTextAlign(Paint.Align.CENTER);
-        letterPaint.setTypeface(Utils.GetLetterTypeFace());
-        float size = Utils.GetTextSizeToFitRect("A",d,d,letterPaint);
-        letterPaint.setTextSize(size);
-        this.textYBaseLine = Utils.GetTextBaseLine("A",this.letterPaint,this.y);
     }
 
     public boolean isLetterBeingTouched(int x, int y){
@@ -143,21 +135,30 @@ public class Letter {
 
         Paint bkgPaint = new Paint();
 
+        Paint letterPaint = new Paint();
+        letterPaint.setStyle(Paint.Style.FILL);
+        letterPaint.setTextAlign(Paint.Align.CENTER);
+        letterPaint.setTypeface(Utils.GetLetterTypeFace());
+        float size = Utils.GetTextSizeToFitRect(this.letter,d,d,letterPaint);
+        letterPaint.setTextSize(size);
+
+        float textYBaseLine = Utils.GetTextBaseLine(this.letter,letterPaint,this.y);
+
         if (!gridLetter){
             bkgPaint.setStyle(Paint.Style.FILL);
             if (this.selectionOrder >= 0){
                 // The letter is selected
-                bkgPaint.setColor(Utils.LINE_COLOR);
-                letterPaint.setColor(Utils.LETTER_COLOR_WITH_BKG);
+                bkgPaint.setColor(Utils.PRIMARY_200);
+                letterPaint.setColor(Utils.TEXT_100);
             }
             else {
                 // The letter is not selected
                 bkgPaint.setColor(Utils.TRANSPARENT);
-                letterPaint.setColor(Utils.LETTER_COLOR_NO_BKG);
+                letterPaint.setColor(Utils.TEXT_200);
             }
 
             canvas.drawCircle(this.x,this.y,this.R,bkgPaint);
-            canvas.drawText(this.letter,this.x,this.textYBaseLine, letterPaint);
+            canvas.drawText(this.letter,this.x,textYBaseLine, letterPaint);
         }
         else {
 
@@ -165,31 +166,30 @@ public class Letter {
             float strokeWidth = this.d*0.1f;
 
             if (this.fingerDownTime != -1){
-                bkgPaint.setColor(Utils.SQUARE_LETTER_PRESSED);
+                bkgPaint.setColor(Utils.ACCENT_200);
             }
             else {
-                bkgPaint.setColor(Utils.SQUARE_BKG);
+                bkgPaint.setColor(Utils.ACCENT_100);
             }
 
             bkgPaint.setStyle(Paint.Style.FILL);
             canvas.drawRoundRect(this.x - this.R,this.y - this.R,this.x + this.R,this.y + this.R,r,r,bkgPaint);
 
-            bkgPaint.setColor(Color.WHITE);
+            bkgPaint.setColor(Utils.TEXT_200);
             bkgPaint.setStyle(Paint.Style.STROKE);
             bkgPaint.setStrokeWidth(strokeWidth);
             canvas.drawRoundRect(this.x - this.R,this.y - this.R,this.x + this.R,this.y + this.R,r,r,bkgPaint);
 
             if (this.letterState == LETTER_STATE_HIDDEN) return;
 
-            //this.letterShown = true;
             if (this.letterState == LETTER_STATE_HINTED){
-                letterPaint.setColor(Utils.SQUARE_LETTER_HINTED);
+                letterPaint.setColor(Utils.TEXT_200);
             }
             else {
-                letterPaint.setColor(Utils.SQUARE_LETTER);
+                letterPaint.setColor(Utils.PRIMARY_100);
             }
 
-            canvas.drawText(this.letter,this.x,this.textYBaseLine, letterPaint);
+            canvas.drawText(this.letter,this.x,textYBaseLine, letterPaint);
         }
 
 

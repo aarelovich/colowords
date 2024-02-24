@@ -9,23 +9,33 @@ public class ExtraWordIndicator {
     private int number = 0;
     private int total = 0;
     private int x,y,d;
-
+    private boolean noAnimation;
     private AnimatorHelper rHelper;
     private Utils.AnimationInterface ai;
 
     public ExtraWordIndicator(int x, int y, int d, Utils.AnimationInterface ai){
+        this.ai = ai;
+        this.noAnimation = false;
+        this.constructor(x,y,d);
+    }
+
+    public ExtraWordIndicator (int x,int y, int d){
+        this.constructor(x,y,d);
+        this.noAnimation = true;
+    }
+
+    private void constructor(int x, int y, int d){
         this.x = x;
         this.y = y;
         this.d = d;
         this.number = 0;
-        this.ai = ai;
         this.rHelper = new AnimatorHelper();
     }
 
     public void setNumber(int number, int total){
         this.number = number;
         this.total = total;
-        this.startAnimation();
+        if (!this.noAnimation) this.startAnimation();
     }
 
     public void decreaseNumber(){
@@ -52,7 +62,7 @@ public class ExtraWordIndicator {
 
         Paint p = new Paint();
         p.setStyle(Paint.Style.FILL);
-        p.setColor(Utils.EXTRA_IND_BKG);
+        p.setColor(Utils.BG_300);
 
         // System.err.println("Drawing at " + x + "," + y + " with size of " + d);
 
@@ -62,7 +72,7 @@ public class ExtraWordIndicator {
             diameter = r.width();
         }
         else {
-            ai.stopAnimation(Utils.ANIMATION_ID_EXTRA);
+            if (!this.noAnimation) ai.stopAnimation(Utils.ANIMATION_ID_EXTRA);
         }
 
         int left = x - diameter/2;
@@ -79,15 +89,15 @@ public class ExtraWordIndicator {
         canvas.drawCircle(x,y,diameter/2,p);
 
         // We draw the wedge.
-        p.setColor(Utils.EXTRA_IND_FiLL);
+        p.setColor(Utils.ACCENT_100);
         canvas.drawArc(left,top,right,bottom,0,angle,true,p);
 
         // We draw the inner circle
-        p.setColor(Utils.EXTRA_IND_BKG);
+        p.setColor(Utils.BG_200);
         canvas.drawCircle(x,y,innerCircleRad,p);
         p.setStyle(Paint.Style.STROKE);
         p.setStrokeWidth(strokeWidth);
-        p.setColor(Utils.EXTRA_IND_LETTER);
+        p.setColor(Utils.TEXT_200);
         canvas.drawCircle(x,y,innerCircleRad,p);
 
         // Finally we draw the text.

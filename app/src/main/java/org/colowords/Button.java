@@ -11,31 +11,14 @@ public class Button {
     private String text;
     private RectF rect;
     private float rCorner;
-    private float baseLine;
     private boolean visible;
     private boolean pressed;
-    private Paint textPaint;
 
     public Button (int top, int left, int width, int height, String text){
         this.rect = new RectF(left,top,left+width,top+height);
         this.text = text;
         this.visible = true;
         this.pressed = false;
-
-        // We will now compute the text size and the base line for text.
-        // We start by imagining a smaller rect inside the text button.
-        float textW   = width*0.9f;
-        float textH   = height*0.9f;
-
-        this.textPaint = new Paint();
-        Typeface font = Typeface.create("Mono",Typeface.BOLD);
-        this.textPaint.setTextAlign(Paint.Align.CENTER);
-        this.textPaint.setTypeface(font);
-        this.textPaint.setTextSize(Utils.GetTextSizeToFitRect(text,textW,textH,this.textPaint));
-        this.textPaint.setColor(Utils.BUTTON_TEXT_COLOR);
-
-        this.baseLine = Utils.GetTextBaseLine(text,this.textPaint,(int)this.rect.centerY());
-
         this.rCorner = 0.05f*width;
 
     }
@@ -73,17 +56,31 @@ public class Button {
 
         if (!this.visible) return;
 
+        // We will now compute the text size and the base line for text.
+        // We start by imagining a smaller rect inside the text button.
+
+        float textW   = this.rect.width()*0.9f;
+        float textH   = this.rect.height()*0.9f;
+
+        Paint textPaint = new Paint();
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setTypeface(Utils.GetElementTypeFace());
+        textPaint.setTextSize(Utils.GetTextSizeToFitRect(text,textW,textH,textPaint));
+        textPaint.setColor(Utils.TEXT_100);
+
+        float baseLine = Utils.GetTextBaseLine(text,textPaint,(int)this.rect.centerY());
+
         Paint p = new Paint();
         p.setStyle(Paint.Style.FILL);
 
-        if (this.pressed) p.setColor(Utils.CIRCLE_SELECTOR_BKG_OPTION);
-        else p.setColor(Utils.CIRCLE_SELECTOR_BKG_MAIN);
+        if (this.pressed) p.setColor(Utils.PRIMARY_300);
+        else p.setColor(Utils.BG_300);
 
         // Draw the background.
         canvas.drawRoundRect(this.rect,this.rCorner,this.rCorner,p);
 
         // And draw the text.
-        canvas.drawText(this.text,this.rect.centerX(),this.baseLine,this.textPaint);
+        canvas.drawText(this.text,this.rect.centerX(),baseLine,textPaint);
 
     }
 

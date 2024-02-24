@@ -16,8 +16,6 @@ public class MainActivity extends AppCompatActivity {
     private final int MAX_N_WORDS   = 15;
     private final int MIN_N_WORDS   = 4;
 
-    public static HashMap<String,String> Dictionary;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,8 +27,12 @@ public class MainActivity extends AppCompatActivity {
         int height = displayMetrics.heightPixels;
         int width = displayMetrics.widthPixels;
 
-        //System.err.println("Device Metrics: " + width + "x" + height);
+        // We load the type faces.
         Utils.LoadTypeFaces(getAssets());
+        // We load the styles.
+        Utils.LoadStyles();
+        // And now we can safely load the style preferences.
+        Utils.LoadStylePreferences(this);
 
         //Preferences.Save(this,Preferences.KEY_MAX_SCORE,"0");
         this.gameScreen = new GameScreen(this, width, height, new GameScreen.NewGameListener() {

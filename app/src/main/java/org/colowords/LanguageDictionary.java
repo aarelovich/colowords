@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 public class LanguageDictionary {
 
-    private static HashMap<String, String> dictionary;
+    private static HashMap<String, String[]> dictionary;
 
     public static boolean LoadDictionary(Context context, String lang_code){
 
@@ -25,8 +25,17 @@ public class LanguageDictionary {
 
             while ((word = reader.readLine()) != null) {
                 String[] word_and_def = word.split("\\|");
-                if (word_and_def.length != 2) continue;
-                dictionary.put(word_and_def[0],word_and_def[1]);
+                String[] def_and_word;
+                if (word_and_def.length == 2) {
+                    def_and_word = new String[1];
+                }
+                else if (word_and_def.length == 3){
+                    def_and_word = new String[2];
+                    def_and_word[1] = word_and_def[2];
+                }
+                else continue;
+                def_and_word[0] = word_and_def[1];
+                dictionary.put(word_and_def[0],def_and_word);
             }
 
             System.err.println("Finished Loading Dictionary from lang code '" + lang_code + "' With: " + Integer.toString(dictionary.size()) + " words");
@@ -50,12 +59,23 @@ public class LanguageDictionary {
         return true;
     }
 
-    public static String GetDefinition(String word){
+    public static String GetDefinition(String word, boolean includeTrueSpelling){
         if (dictionary == null) return "";
         if (!dictionary.containsKey(word)) {
             return "";
         }
-        return dictionary.get(word);
+        String[] def_and_true_spelling = dictionary.get(word);
+        if (includeTrueSpelling){
+            if (def_and_true_spelling.length == 2){
+                return def_and_true_spelling[1] + ": " + def_and_true_spelling[0];
+            }
+            else {
+                return def_and_true_spelling[0];
+            }
+        }
+        else {
+            return def_and_true_spelling[0];
+        }
     }
 
     public static String[] GetWordList() {
@@ -73,7 +93,7 @@ public class LanguageDictionary {
 
         for (int i = 0; i < wordlist.length; i++){
             String s = wordlist[i];
-            String def = dictionary.get(s);
+            String def = dictionary.get(s)[0];
             if (def.length() > max){
                 ret[0] = s;
                 ret[1] = def;

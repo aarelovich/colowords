@@ -31,6 +31,8 @@ public class GameScreen extends View implements Utils.AnimationInterface {
     private CircleDropDown langSelector;
     private Button newGameButton;
     private Score scoreIndicator;
+    private SettingsButton settingsButton;
+    private SettingsScreen settings;
     private Rect letterGridGeometry;
     private Timer animationTimer;
     private List<Integer> animationRequests;
@@ -136,6 +138,16 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         x = (width - w)/2;
         this.highScoreTextRect = new RectF(x,topMargin,x + w,topMargin + d);
 
+        // The settings button.
+        x = width/2;
+        h = (int)(0.15*width);
+        y = height - h/2 - margin;
+        w = h;
+        this.settingsButton = new SettingsButton(x,y,w,h);
+
+        // Configuring the settings screen.
+        this.settings = new SettingsScreen(context,width,height);
+
     }
 
     public void setNewCrossWord(CrossWordGrid cwg, List<String> extras){
@@ -151,6 +163,16 @@ public class GameScreen extends View implements Utils.AnimationInterface {
     }
 
     public void fingerDown(int x, int y){
+
+        if (this.settings.isBeingShown()){
+            if (this.settings.fingerDown(x,y)) this.invalidate();
+            return;
+        }
+
+        if (this.settingsButton.fingerDown(x,y)){
+            this.invalidate();
+            return;
+        }
 
         if (this.newGameButton.fingerDown(x,y)){
             // We are pressing the button.
@@ -198,6 +220,22 @@ public class GameScreen extends View implements Utils.AnimationInterface {
     }
 
     public void fingerMoved(int x, int y){
+
+        if (this.settings.isBeingShown()){
+            if (this.settings.fingerMove(x,y)) this.invalidate();
+            return;
+        }
+
+        if (this.difficulty.fingerMove(x,y)){
+            this.invalidate();
+            return;
+        }
+
+        if (this.langSelector.fingerMove(x,y)){
+            this.invalidate();
+            return;
+        }
+
         String word = this.letterWheel.fingerMove(x,y);
         if (word != ""){
             this.invalidate();
@@ -207,6 +245,33 @@ public class GameScreen extends View implements Utils.AnimationInterface {
     }
 
     public void fingerUp(int x, int y){
+
+        if (this.settings.isBeingShown()){
+            if (this.settings.fingerUp(x,y)) this.invalidate();
+
+            // We need to check if a request was requested.
+            if (this.settings.getPreferenceDeleteRequest()){
+                ConfirmationDialog.Show(getContext(), "Reset High Score", "Selecting YES will set the highest \nDo you want to proceed", new ConfirmationDialog.OnOptionSelectedListener() {
+                    @Override
+                    public void onYesSelected() {
+                        Preferences.Save(getContext(),Preferences.KEY_MAX_SCORE,"0");
+                    }
+
+                    @Override
+                    public void onNoSelected() {
+                        // We basically do nothing.
+                    }
+                });
+            }
+
+            return;
+        }
+
+        if (this.settingsButton.fingerUp(x,y)){
+            this.settings.show();
+            this.invalidate();
+            return;
+        }
 
         if (this.newGameButton.fingerUp(x,y)){
             // New game button was pressed.
@@ -318,14 +383,16 @@ public class GameScreen extends View implements Utils.AnimationInterface {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        if (this.settings.isBeingShown()){
+            this.settings.render(canvas);
+            return;
+        }
+
         // We paint the background color
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Utils.BKG_COLOR);
+        paint.setColor(Utils.BG_100);
         canvas.drawPaint(paint);
-
-//        paint.setColor(Color.BLACK);
-//        canvas.drawRect(this.letterGridGeometry.left,this.letterGridGeometry.top,this.letterGridGeometry.right,this.letterGridGeometry.bottom,paint);
 
         // We draw the letter wheel.
         this.letterWheel.render(canvas);
@@ -338,6 +405,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         this.newGameButton.render(canvas);
         this.renderScore(canvas);
         this.banner.render(canvas); // Banner must be on top.
+        this.settingsButton.render(canvas);
 
     }
 
@@ -351,7 +419,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         //Typeface font = Typeface.create("Mono",Typeface.BOLD);
         p.setTextAlign(Paint.Align.CENTER);
         p.setStyle(Paint.Style.FILL);
-        p.setColor(Utils.EXTRA_IND_BKG);
+        p.setColor(Utils.TEXT_200);
         //p.setTypeface(font);
         p.setTypeface(Utils.GetElementTypeFace());
         p.setTextSize(Utils.GetTextSizeToFitRect(text,this.highScoreTextRect.width(),this.highScoreTextRect.height(),p));
@@ -362,7 +430,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
 
         // Then the outline.
         p.setStyle(Paint.Style.STROKE);
-        p.setColor(Utils.EXTRA_IND_FiLL);
+        p.setColor(Utils.ACCENT_100);
         p.setStrokeWidth(0.03f*this.highScoreTextRect.height());
         canvas.drawText(text,this.highScoreTextRect.centerX(),baseline,p);
 

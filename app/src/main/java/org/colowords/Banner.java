@@ -15,12 +15,12 @@ public class Banner {
     private RectF outerBanner;
     private RectF innerBanner;
     private Map<Integer, List<String>> messages;
-    private Paint textPaint;
     private RectF textRect;
     private float radious;
     private AnimatorHelper ah;
     private String currentMessage;
     private Utils.AnimationInterface ai;
+    private boolean forceShow;
 
     public static int MESSAGE_TYPE_WORD_FOUND = 0;
     public static int MESSAGE_TYPE_EXTRA_FOUND = 1;
@@ -28,10 +28,18 @@ public class Banner {
     public static int MESSAGE_TYPE_NEW_ZERO_POINT_WORD = 3;
 
     public Banner(int x, int y, int w, int h, Utils.AnimationInterface ai){
-
-        this.outerBanner = new RectF(x,y,x+w,y+h);
-
         this.ai = ai;
+        this.forceShow = false;
+        this.Constructor(x,y,w,h);
+    }
+
+    public Banner(int x, int y, int w, int h){
+        this.forceShow = true;
+        this.Constructor(x,y,w,h);
+    }
+
+    private void Constructor(int x, int y, int w, int h){
+        this.outerBanner = new RectF(x,y,x+w,y+h);
 
         this.radious = 0.03f*h;
 
@@ -50,13 +58,6 @@ public class Banner {
         float textT   = this.innerBanner.centerY() - textH/2;
         this.textRect = new RectF(textL,textT,textL+textW,textT+textH);
 
-        this.textPaint = new Paint();
-        Typeface font = Typeface.create("Mono",Typeface.BOLD);
-        this.textPaint.setTextAlign(Paint.Align.CENTER);
-        this.textPaint.setStyle(Paint.Style.FILL);
-        this.textPaint.setTypeface(font);
-        //this.textPaint.setTextSize(Utils.GetTextSizeToFitRect(text,textW,textH,this.textPaint));
-        this.textPaint.setColor(Utils.BANNER_TEXT);
 
         // Construct the animation helper.
         this.ah = new AnimatorHelper();
@@ -70,21 +71,33 @@ public class Banner {
 
     }
 
+
     public void render(Canvas canvas){
 
         // If we are not moving, then there is not point in rendering.
         // We are hidden.
-        Integer pos = this.ah.getNextPosition();
-        if (pos == null) {
-            this.ai.stopAnimation(Utils.ANIMATION_ID_BANNER);
-            return;
+        float dy;
+        if (forceShow){
+            dy = 0;
         }
-        float dy = pos  - this.innerBanner.top;
-        //System.err.println("BANNER at Y: " + pos + ". DY: " + dy);
+        else {
+           Integer pos = this.ah.getNextPosition();
+            if (pos == null) {
+                this.ai.stopAnimation(Utils.ANIMATION_ID_BANNER);
+                return;
+            }
+            dy = pos  - this.innerBanner.top;
+        }
 
         Paint p = new Paint();
         p.setStyle(Paint.Style.FILL);
-        p.setColor(Utils.BANNER_TEXT);
+        p.setColor(Utils.TEXT_200);
+
+        Paint textPaint = new Paint();
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setStyle(Paint.Style.FILL);
+        textPaint.setTypeface(Utils.GetMessageTypeFace());
+        textPaint.setColor(Utils.TEXT_200);
 
         this.outerBanner = moveRectToNewY(this.outerBanner,dy);
         this.innerBanner = moveRectToNewY(this.innerBanner,dy);
@@ -94,13 +107,13 @@ public class Banner {
         canvas.drawRoundRect(this.outerBanner,this.radious,this.radious,p);
 
         // Draw the foreground
-        p.setColor(Utils.BANNER_MAIN);
+        p.setColor(Utils.PRIMARY_100);
         canvas.drawRoundRect(this.innerBanner,this.radious,this.radious,p);
 
         // And draw the text.
-        this.textPaint.setTextSize(Utils.GetTextSizeToFitRect(this.currentMessage,this.textRect.width(),this.textRect.height(),this.textPaint));
-        float baseLine = Utils.GetTextBaseLine(this.currentMessage,this.textPaint,(int)this.textRect.centerY());
-        canvas.drawText(this.currentMessage,this.innerBanner.centerX(),baseLine,this.textPaint);
+        textPaint.setTextSize(Utils.GetTextSizeToFitRect(this.currentMessage,this.textRect.width(),this.textRect.height(),textPaint));
+        float baseLine = Utils.GetTextBaseLine(this.currentMessage,textPaint,(int)this.textRect.centerY());
+        canvas.drawText(this.currentMessage,this.innerBanner.centerX(),baseLine,textPaint);
 
     }
 
@@ -112,6 +125,7 @@ public class Banner {
     }
 
     public void showBannerMessage(int type){
+
         if (!this.messages.containsKey(type)) {
             this.currentMessage =  "";
             return;
@@ -130,6 +144,10 @@ public class Banner {
             this.ai.startAnimation(Utils.ANIMATION_ID_BANNER);
         }
 
+    }
+
+    public void setMessage(String text){
+        this.currentMessage = text;
     }
 
     private List<String> getMessages(int type){

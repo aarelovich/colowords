@@ -39,6 +39,7 @@ android:orientation="vertical">
 
         <!-- Right side: TextView -->
         <ScrollView
+            android:id="@+id/scrollViewDef"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="2"

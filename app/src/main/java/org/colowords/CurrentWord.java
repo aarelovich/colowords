@@ -11,7 +11,7 @@ public class CurrentWord {
     private Rect limits;
     private int y;
     private String word;
-    private Paint wordPaint;
+
     public CurrentWord(int x, int y, int w, int h){
         this.word = "";
         this.boundsRect = new Rect(x,y,x+w,y+h);
@@ -23,12 +23,6 @@ public class CurrentWord {
 
         this.limits = new Rect(nx,ny,nx + limitW,ny+limitH);
 
-        this.wordPaint = new Paint();
-        this.wordPaint.setStyle(Paint.Style.FILL);
-        this.wordPaint.setTextAlign(Paint.Align.CENTER);
-        Typeface font = Typeface.create("Mono",Typeface.BOLD);
-        this.wordPaint.setTypeface(font);
-        this.wordPaint.setColor(Utils.FORMED_WORD_LETTER);
 
 
     }
@@ -45,16 +39,23 @@ public class CurrentWord {
 
         if (this.word == "") return;
 
+        Paint wordPaint = new Paint();
+        wordPaint.setStyle(Paint.Style.FILL);
+        wordPaint.setTextAlign(Paint.Align.CENTER);
+        wordPaint.setTypeface(Utils.GetMessageTypeFace());
+        wordPaint.setColor(Utils.TEXT_200);
+
+
         Paint p = new Paint();
         p.setStyle(Paint.Style.FILL);
-        p.setColor(Utils.FORMED_WORD_BKG);
+        p.setColor(Utils.BG_300);
 
         float r = 0.2f*this.boundsRect.height();
         canvas.drawRoundRect(this.boundsRect.left,this.boundsRect.top,this.boundsRect.right,this.boundsRect.bottom,r,r,p);
 
         // We draw the text.
-        this.wordPaint.setTextSize(Utils.GetTextSizeToFitRect(this.word,limits.width(),limits.height(),this.wordPaint));
-        float baseline = Utils.GetTextBaseLine(this.word,this.wordPaint,this.limits.centerY());
+        wordPaint.setTextSize(Utils.GetTextSizeToFitRect(this.word,limits.width(),limits.height(),wordPaint));
+        float baseline = Utils.GetTextBaseLine(this.word,wordPaint,this.limits.centerY());
         canvas.drawText(word,this.limits.centerX(),baseline,wordPaint);
 
     }

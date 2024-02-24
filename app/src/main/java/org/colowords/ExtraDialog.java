@@ -8,6 +8,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class ExtraDialog extends Dialog {
     private TextView titleView;
     private ListView wordListView;
     private List<String> wordList;
+    private ScrollView srcollViewDef;
 
     public ExtraDialog(Context context) {
         super(context);
@@ -31,6 +33,10 @@ public class ExtraDialog extends Dialog {
         titleView = findViewById(R.id.extraDialogTitle);
         definitionView = findViewById(R.id.extraDialogDefinitionView);
         wordListView = findViewById(R.id.extraDialogWordList);
+        srcollViewDef = findViewById(R.id.scrollViewDef);
+
+        srcollViewDef.setBackgroundColor(Utils.PRIMARY_200);
+        wordListView.setBackgroundColor(Utils.PRIMARY_300);
 
         // Adjust dialog dimensions to half the screen width and half the screen height
         this.configureDialogSize();
@@ -56,7 +62,7 @@ public class ExtraDialog extends Dialog {
                 // Update TextView with selected item
                 String word = wordList.get(position);
                 adapter.setCurrentSelection(position);
-                definitionView.setText(LanguageDictionary.GetDefinition(word));
+                definitionView.setText(LanguageDictionary.GetDefinition(word,true));
             }
         });
 
@@ -64,17 +70,17 @@ public class ExtraDialog extends Dialog {
     }
 
     private void configureTitle(){
-        titleView.setBackgroundColor(Utils.EXTRA_IND_FiLL);
-        titleView.setTextColor(Utils.EXTRA_IND_BKG); // Change your_color to your desired color
+        titleView.setBackgroundColor(Utils.PRIMARY_100);
+        titleView.setTextColor(Utils.TEXT_200); // Change your_color to your desired color
         titleView.setGravity(Gravity.CENTER);
         titleView.setText("BONUS WORDS");
     }
 
     private void configureDefinitionView(){
         definitionView.setTextSize(20); // Change 20 to your desired font size
-        definitionView.setTextColor(Utils.EXTRA_IND_LETTER); // Change your_color to your desired color
+        definitionView.setTextColor(Utils.TEXT_200); // Change your_color to your desired color
         definitionView.setTypeface(null, Typeface.NORMAL);
-        definitionView.setBackgroundColor(Utils.EXTRA_IND_BKG);
+        definitionView.setBackgroundColor(Utils.PRIMARY_200);
         definitionView.setGravity(Gravity.LEFT);
     }
 

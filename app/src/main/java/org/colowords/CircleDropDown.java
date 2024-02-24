@@ -16,6 +16,7 @@ public class CircleDropDown {
     private boolean deployed;
     private int currentSelectionIndex;
     private int x, y, d;
+    private int hoverOption;
 
     public CircleDropDown (int x, int y, int d){
         this.deployed = false;
@@ -77,17 +78,26 @@ public class CircleDropDown {
 
         for (int i = 0; i < last; i++){
             String text = "";
-            int colorForText = Utils.CIRCLE_SELECTOR_TEXT_MAIN;
+            int colorForText = Utils.TEXT_200;
             int colorForStroke = Color.BLACK;
             if (i == 0){
-                p.setColor(Utils.CIRCLE_SELECTOR_BKG_MAIN);
+                p.setColor(Utils.BG_300);
                 text = this.getCurrentSelection();
             }
             else {
+                // This is one of the options
                 text = this.options.get(i-1);
-                p.setColor(Utils.CIRCLE_SELECTOR_BKG_OPTION);
-                colorForText = Utils.CIRCLE_SELECTOR_TEXT_OPTION;
-                colorForStroke = Utils.CIRCLE_SELECTOR_BKG_MAIN;
+
+                if (i != hoverOption){
+                    p.setColor(Utils.ACCENT_200);
+                    colorForText = Utils.BG_100;
+                    colorForStroke = Utils.BG_100;
+                }
+                else {
+                    p.setColor(Utils.ACCENT_100);
+                    colorForText = Utils.BG_100;
+                    colorForStroke = Utils.BG_100;
+                }
             }
             // System.err.println("Drawing option " + i + " at " + x + ", " + y + " with " + d);
             // This is the circle.
@@ -116,9 +126,28 @@ public class CircleDropDown {
         if (this.deployed) return false; // Nothing to do.
         if (this.touchAreas.isEmpty()) return false;
         if (this.touchAreas.get(0).contains(x,y)){
-            System.err.println("Deploying");
+            this.hoverOption = -1;
             this.deployed = true;
             return true;
+        }
+        return false;
+    }
+
+    public boolean fingerMove(int x, int y){
+        if (this.options.isEmpty()) return false; // Nothing to do.
+        if (!this.deployed) return false; // Nothing to do.
+        if (this.touchAreas.isEmpty()) return false;
+        for (int i = 1; i < touchAreas.size(); i++){
+            if (this.touchAreas.get(i).contains(x,y)) {
+                int newhover = i;
+                if (this.hoverOption != newhover){
+                    this.hoverOption = i;
+                    return true;
+                }
+                else {
+                    return false;
+                }
+            }
         }
         return false;
     }

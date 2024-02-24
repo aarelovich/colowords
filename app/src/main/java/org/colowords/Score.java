@@ -11,7 +11,6 @@ public class Score {
     private String multiplier;
     private Utils.AnimationInterface ai;
     private AnimatorHelper rHelper;
-
     private Rect scoreLine;
     private Rect multLine;
 
@@ -28,10 +27,11 @@ public class Score {
         String oldscore = this.score;
         this.score = newscore;
         this.multiplier = "x" + Integer.toString(m);
-        // We only start the animation if the score changed
+        // We only start the animation if the score changed and the animation interface is not null
+        if (this.ai == null) return;
         if (!newscore.equals(oldscore)){
             if (this.rHelper.computeAnimationSteps(this.scoreLine,2,200,Utils.ANIMATION_TICK_LENGTH)){
-                ai.startAnimation(Utils.ANIMATION_ID_SCORE);
+                if (ai != null) ai.startAnimation(Utils.ANIMATION_ID_SCORE);
             }
         }
     }
@@ -40,12 +40,11 @@ public class Score {
 
         Paint p = new Paint();
         p.setStyle(Paint.Style.FILL);
-        p.setColor(Utils.EXTRA_IND_BKG);
 
         Rect scoreBKG = this.rHelper.getNextRect();
         if (scoreBKG == null) {
             //System.err.println("Using REGULAR Score line @ " + this.scoreLine.toString());
-            ai.stopAnimation(Utils.ANIMATION_ID_SCORE);
+            if (this.ai != null) ai.stopAnimation(Utils.ANIMATION_ID_SCORE);
             scoreBKG = this.scoreLine;
         }
 
@@ -57,9 +56,9 @@ public class Score {
         p.setTextSize(textSize);
 
 
-        p.setColor(Utils.EXTRA_IND_BKG);
+        p.setColor(Utils.ACCENT_100);
         canvas.drawText(this.score,scoreBKG.left,scoreBKG.bottom,p);
-        p.setColor(Utils.EXTRA_IND_FiLL);
+        p.setColor(Utils.ACCENT_200);
         canvas.drawText(this.multiplier,this.multLine.left,this.multLine.bottom,p);
 
 

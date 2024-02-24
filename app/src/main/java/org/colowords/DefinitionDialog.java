@@ -20,6 +20,7 @@ public class DefinitionDialog extends Dialog {
     private TextView secondWord;
     private TextView secondDefinition;
     private ScrollView secondScrollView;
+    private ScrollView firstScrollView;
 
     public DefinitionDialog(Context context) {
         super(context);
@@ -35,6 +36,10 @@ public class DefinitionDialog extends Dialog {
         secondDefinition = findViewById(R.id.definition2);
         secondWord = findViewById(R.id.word2);
         secondScrollView = findViewById(R.id.secondWordScroll);
+        firstScrollView = findViewById(R.id.firstWordScroll);
+
+        firstScrollView.setBackgroundColor(Utils.PRIMARY_200);
+        secondScrollView.setBackgroundColor(Utils.PRIMARY_200);
 
         this.configureDefinitionTextView(secondDefinition);
         this.configureDefinitionTextView(firstDefinition);
@@ -63,7 +68,7 @@ public class DefinitionDialog extends Dialog {
     private String[] getWordAndDef(GridWord gw){
 
         System.err.println("Trying to get the definition of: " + gw.getString());
-        System.err.println("Definition should be: " + LanguageDictionary.GetDefinition(gw.getString()));
+        System.err.println("Definition should be: " + LanguageDictionary.GetDefinition(gw.getString(),true));
 
         String[] ret = new String[2];
         if (gw.getHiddenFlag()){
@@ -77,7 +82,7 @@ public class DefinitionDialog extends Dialog {
         else {
             ret[0] = gw.getString();
         }
-        ret[1] = LanguageDictionary.GetDefinition(gw.getString());
+        ret[1] = LanguageDictionary.GetDefinition(gw.getString(),!gw.getHiddenFlag());
         return ret;
     }
 
@@ -123,17 +128,17 @@ public class DefinitionDialog extends Dialog {
 
     private void configureDefinitionTextView(TextView tv){
         tv.setTextSize(20); // Change 20 to your desired font size
-        tv.setTextColor(Utils.EXTRA_IND_LETTER); // Change your_color to your desired color
+        tv.setTextColor(Utils.TEXT_100); // Change your_color to your desired color
         tv.setTypeface(null, Typeface.NORMAL);
-        tv.setBackgroundColor(Utils.EXTRA_IND_BKG);
+        tv.setBackgroundColor(Utils.PRIMARY_200);
         tv.setGravity(Gravity.LEFT);
         tv.setWidth(getWidth());
     }
 
     private void configureWordTextView(TextView tv){
         tv.setTypeface(null, Typeface.BOLD_ITALIC);
-        tv.setBackgroundColor(Utils.EXTRA_IND_FiLL);
-        tv.setTextColor(Utils.EXTRA_IND_BKG); // Change your_color to your desired color
+        tv.setBackgroundColor(Utils.TEXT_200);
+        tv.setTextColor(Utils.PRIMARY_200); // Change your_color to your desired color
         tv.setWidth(getWidth());
         tv.setGravity(Gravity.LEFT);
     }

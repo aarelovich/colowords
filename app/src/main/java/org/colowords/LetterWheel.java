@@ -20,8 +20,6 @@ public class LetterWheel {
     private String wordFormed;
     private Path shuffleButtonDef;
     private Path shuffleButtonArrows;
-    private Paint shuffleButtonPaint;
-    private Paint shuffleButtonArrowPaint;
     private RectF shuffleButtonPressArea;
     private boolean shuffleButtonPressed;
 
@@ -81,18 +79,6 @@ public class LetterWheel {
         this.shuffleButtonArrows.lineTo(right-arrowHeadWidth,bottom + arrowHeadHeight/2);
         this.shuffleButtonArrows.lineTo(right,bottom);
         this.shuffleButtonArrows.lineTo(right-arrowHeadWidth,bottom - arrowHeadHeight/2);
-
-
-        this.shuffleButtonPaint = new Paint();
-        this.shuffleButtonPaint.setStyle(Paint.Style.STROKE);
-        this.shuffleButtonPaint.setStrokeWidth(0.18f*rh);
-        this.shuffleButtonPaint.setStrokeCap(Paint.Cap.ROUND);
-        this.shuffleButtonPaint.setColor(Utils.SHUFFLE_BUTTON_NOT_PRESSED);
-
-        this.shuffleButtonArrowPaint = new Paint();
-        this.shuffleButtonArrowPaint.setStyle(Paint.Style.FILL);
-        this.shuffleButtonArrowPaint.setColor(Utils.SHUFFLE_BUTTON_NOT_PRESSED);
-
 
     }
 
@@ -278,7 +264,7 @@ public class LetterWheel {
     private void drawBackground(Canvas canvas){
         Paint paint = new Paint();
         paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Utils.WHEEL_BKG_COLOR);
+        paint.setColor(Utils.BG_300);
         canvas.drawCircle(this.center_x,this.center_y,this.diameter/2,paint);
     }
 
@@ -292,7 +278,7 @@ public class LetterWheel {
         Paint linePaint = new Paint();
         linePaint.setStyle(Paint.Style.FILL);
         linePaint.setStrokeWidth(this.letterDiameter/3);
-        linePaint.setColor(Utils.LINE_COLOR);
+        linePaint.setColor(Utils.ACCENT_100);
 
         for (int i = 1; i < linePoints.size(); i++){
             Point start = linePoints.get(i-1);
@@ -319,17 +305,30 @@ public class LetterWheel {
 
         if (wordFormed != "") return; // We don't render it when forming words.
 
+        float rh = this.diameter*0.14f;
+
+        Paint shuffleButtonPaint = new Paint();
+        shuffleButtonPaint.setStyle(Paint.Style.STROKE);
+        shuffleButtonPaint.setStrokeWidth(0.18f*rh);
+        shuffleButtonPaint.setStrokeCap(Paint.Cap.ROUND);
+        shuffleButtonPaint.setColor(Utils.PRIMARY_300);
+
+        Paint shuffleButtonArrowPaint = new Paint();
+        shuffleButtonArrowPaint.setStyle(Paint.Style.FILL);
+        shuffleButtonArrowPaint.setColor(Utils.PRIMARY_100);
+
+
         // The path has all the definitions, we just draw it.
         if (shuffleButtonPressed){
-            this.shuffleButtonArrowPaint.setColor(Utils.SHUFFLE_BUTTON_PRESSED);
-            this.shuffleButtonPaint.setColor(Utils.SHUFFLE_BUTTON_PRESSED);
+            shuffleButtonArrowPaint.setColor(Utils.PRIMARY_100);
+            shuffleButtonPaint.setColor(Utils.PRIMARY_100);
         }
         else {
-            this.shuffleButtonArrowPaint.setColor(Utils.SHUFFLE_BUTTON_NOT_PRESSED);
-            this.shuffleButtonPaint.setColor(Utils.SHUFFLE_BUTTON_NOT_PRESSED);
+            shuffleButtonArrowPaint.setColor(Utils.PRIMARY_200);
+            shuffleButtonPaint.setColor(Utils.PRIMARY_200);
         }
-        canvas.drawPath(this.shuffleButtonDef,this.shuffleButtonPaint);
-        canvas.drawPath(this.shuffleButtonArrows,this.shuffleButtonArrowPaint);
+        canvas.drawPath(this.shuffleButtonDef,shuffleButtonPaint);
+        canvas.drawPath(this.shuffleButtonArrows,shuffleButtonArrowPaint);
     }
 
 }

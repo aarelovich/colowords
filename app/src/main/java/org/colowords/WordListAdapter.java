@@ -39,12 +39,12 @@ public class WordListAdapter extends ArrayAdapter<String> {
 
         textView.setTypeface(null, Typeface.BOLD);
         if (position == this.selected){
-            textView.setTextColor(Utils.EXTRA_IND_LETTER); // Change your_color to your desired color
-            textView.setBackgroundColor(Utils.EXTRA_SELECTED_BKG);
+            textView.setTextColor(Utils.ACCENT_100); // Change your_color to your desired color
+            textView.setBackgroundColor(Utils.PRIMARY_100);
         }
         else {
-            textView.setTextColor(Utils.EXTRA_IND_LETTER); // Change your_color to your desired color
-            textView.setBackgroundColor(Utils.EXTRA_IND_BKG);
+            textView.setTextColor(Utils.TEXT_200); // Change your_color to your desired color
+            textView.setBackgroundColor(Utils.PRIMARY_200);
         }
         textView.setGravity(Gravity.CENTER);
 
