@@ -22,6 +22,8 @@ public class SettingsScreen {
     private boolean isActive;
     private boolean prefDeleteRequest;
     private RectF divisorDef;
+    private RectF titleViewDef;
+    private RectF defViewDef;
     private Button btnChangeStyle;
     private Button btnChangeUIFont;
     private Button btnChangeMessageFont;
@@ -53,22 +55,21 @@ public class SettingsScreen {
         // The banner up top
         int bannerH = (int)(height*0.05f);
         this.banner = new Banner(horizontalMargin,0,effectiveWidth,bannerH);
-        this.banner.setMessage("MESSAGE");
+        this.banner.setMessage("MESSAGE!");
+
+        d = (int)(effectiveWidth*0.2f);
+        x = horizontalMargin*2 + d/2;
 
         // Dropdown with options
-        w = (int)(effectiveWidth*0.3f);
-        x = (effectiveWidth)/2 + horizontalMargin;
-        y = bannerH + verticalAir + w/2;
-        this.dropDown = new CircleDropDown(x,y,w);
+        y = bannerH + verticalAir + d/2;
+        this.dropDown = new CircleDropDown(x,y,d);
         this.dropDown.addOptions("OPT1");
         this.dropDown.addOptions("OPT2");
         this.dropDown.addOptions("OPT3");
         this.dropDown.setCurrentIndex(0);
 
-        // Now the letters.
-        d = (int)(effectiveWidth*0.2f);
-        x = horizontalMargin + effectiveWidth/2;
-        y = y + w + verticalAir - d/2;
+        // Now the letters (Display and Hidde)
+        y = y + d + verticalAir;
         this.letterShown = new Letter(false);
         this.letterShown.setLetter("D");
         this.letterShown.setGeometry(x,y,d);
@@ -79,6 +80,17 @@ public class SettingsScreen {
         this.letterHinted.setLetter("H");
         this.letterHinted.setGeometry(x,y,d);
         this.letterHinted.forceHintedState();
+
+        // And the text and definitions view.
+        w = effectiveRight - horizontalMargin*7 - d;
+        x = effectiveRight - w - horizontalMargin*2;
+        int top = bannerH + verticalAir;
+        h = (int)(0.05f*height);
+        this.titleViewDef = new RectF(x,top,x+w,top+h);
+        top = top+h;
+        int mustOccupy = verticalAir*2 + d*3;
+        h = mustOccupy - h;
+        this.defViewDef   = new RectF(x,top,x+w,top+h);
 
         // The current word
         w = (int)(effectiveWidth*0.5f);
@@ -132,7 +144,36 @@ public class SettingsScreen {
         y = height - verticalMargin - h;
         this.btnSave = new Button(y,x,w,h,"BACK");
         y = y - verticalMargin - h;
-        this.btnReset = new Button(y,x,w,h,"ZERO HIGH SCORE");
+        this.btnReset = new Button(y,x,w,h,"ZERO SCORE");
+
+    }
+
+    private void renderDefinitionExampleDialog (Canvas canvas) {
+
+        Paint bkg = new Paint();
+        bkg.setStyle(Paint.Style.FILL);
+
+        String word = "WORD";
+        String def  = "Definition";
+
+        Paint textPaint = new Paint();
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setStyle(Paint.Style.FILL);
+        textPaint.setColor(Utils.GetTextDefinitionColor());
+        textPaint.setTextSize(Utils.GetTextSizeToFitRect(word,this.titleViewDef.width()*0.8f,this.titleViewDef.height()*0.8f,textPaint));
+
+        // First represents the title.
+        bkg.setColor(Utils.PRIMARY_100);
+        canvas.drawRect(this.titleViewDef,bkg);
+        float baseline = Utils.GetTextBaseLine(word,textPaint,(int)this.titleViewDef.centerY());
+        canvas.drawText(word,this.titleViewDef.centerX(),baseline,textPaint);
+
+
+        // Second represents the definitions.
+        bkg.setColor(Utils.PRIMARY_200);
+        canvas.drawRect(this.defViewDef,bkg);
+        baseline = Utils.GetTextBaseLine(def,textPaint,(int)this.defViewDef.centerY());
+        canvas.drawText(def,this.defViewDef.centerX(),baseline,textPaint);
 
     }
 
@@ -166,6 +207,7 @@ public class SettingsScreen {
         this.banner.render(canvas);
         this.letterHinted.render(canvas);
         this.letterShown.render(canvas);
+        this.renderDefinitionExampleDialog(canvas);
         this.madeWord.render(canvas);
         this.letterWheel.render(canvas);
         this.extraIndicator.render(canvas);
@@ -219,9 +261,24 @@ public class SettingsScreen {
             return true;
         }
 
+        // We now check the color changing elements.
+        if (this.letterHinted.getBounds().contains(x,y)){
+            Utils.nextHintedLetterColor();
+            return true;
+        }
+
+        if (this.letterShown.getBounds().contains(x,y)){
+            Utils.nextDisplayLetterColor();
+            return true;
+        }
+
+        if (this.defViewDef.contains(x,y)){
+            Utils.nextTextDefColor();
+            return true;
+        }
+
         return this.dropDown.fingerDown(x,y);
     }
-
 
     public boolean fingerUp(int x, int y){
 

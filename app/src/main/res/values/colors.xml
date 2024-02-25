@@ -3,11 +3,11 @@
     <color name="primary_100">#2C3A4F</color>
     <color name="primary_200">#56647b</color>
     <color name="primary_300">#b4c2dc</color>
-    <color name="accent_100">#FF4D4D</color>
-    <color name="accent_200">#ffecda</color>
-    <color name="text_100">#FFFFFF</color>
-    <color name="text_200">#e0e0e0</color>
-    <color name="bg_100">#1A1F2B</color>
-    <color name="bg_200">#292e3b</color>
-    <color name="bg_300">#414654</color>
+    <color name="accent_100"> #FF4D4D</color>
+    <color name="accent_200"> #ffecda</color>
+    <color name="text_100">   #FFFFFF</color>
+    <color name="text_200">   #e0e0e0</color>
+    <color name="bg_100">     #1A1F2B</color>
+    <color name="bg_200">     #292e3b</color>
+    <color name="bg_300">     #414654</color>
 </resources>

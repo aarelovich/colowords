@@ -15,6 +15,9 @@ public class Preferences {
     public static final String  KEY_MESSAGE_FONT = "font_message";
     public static final String  KEY_LETTER_FONT  = "font_letter";
     public static final String  KEY_MAX_SCORE     = "max_score";
+    public static final String KEY_TEXT_OVERRIDE  = "def_text_override";
+    public static final String KEY_DL_OVERRIDE  = "disp_letter_override";
+    public static final String KEY_HL_OVERRIDE  = "hinted_letter_override";
 
     // Save values to SharedPreferences
     public static void Save(Context context, String key, String value) {
@@ -22,6 +25,18 @@ public class Preferences {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(key, value);
         editor.apply();
+    }
+
+    public static void SaveAsInt(Context context, String key, int value){
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(key, value);
+        editor.apply();
+    }
+
+    public static int GetAsInt(Context context, String key){
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return sharedPreferences.getInt(key, -1);
     }
 
     public static void ClearPreferences(Context context){

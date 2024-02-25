@@ -4,6 +4,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 
 import java.util.ArrayList;
@@ -51,6 +52,11 @@ public class Letter {
         this.gridLetter = !forLetterWheel;
         this.letterState = LETTER_STATE_HIDDEN;
         this.fingerDownTime = -1;
+    }
+
+    public Rect getBounds(){
+        int R = this.d/2;
+        return new Rect(this.x-R,this.y-R,this.x+R,this.y+R);
     }
 
     public Letter (String letterState){
@@ -183,10 +189,10 @@ public class Letter {
             if (this.letterState == LETTER_STATE_HIDDEN) return;
 
             if (this.letterState == LETTER_STATE_HINTED){
-                letterPaint.setColor(Utils.TEXT_200);
+                letterPaint.setColor(Utils.GetHintedLetterColor());
             }
             else {
-                letterPaint.setColor(Utils.PRIMARY_100);
+                letterPaint.setColor(Utils.GetDisplayLetterColor());
             }
 
             canvas.drawText(this.letter,this.x,textYBaseLine, letterPaint);

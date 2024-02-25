@@ -35,8 +35,8 @@ public class ExtraDialog extends Dialog {
         wordListView = findViewById(R.id.extraDialogWordList);
         srcollViewDef = findViewById(R.id.scrollViewDef);
 
-        srcollViewDef.setBackgroundColor(Utils.PRIMARY_200);
-        wordListView.setBackgroundColor(Utils.PRIMARY_300);
+        srcollViewDef.setBackgroundColor(Utils.PRIMARY_100);
+        wordListView.setBackgroundColor(Utils.PRIMARY_100);
 
         // Adjust dialog dimensions to half the screen width and half the screen height
         this.configureDialogSize();
@@ -70,17 +70,16 @@ public class ExtraDialog extends Dialog {
     }
 
     private void configureTitle(){
-        titleView.setBackgroundColor(Utils.PRIMARY_100);
-        titleView.setTextColor(Utils.TEXT_200); // Change your_color to your desired color
+        titleView.setBackgroundColor(Utils.PRIMARY_200);
+        titleView.setTextColor(Utils.GetTextDefinitionColor()); // Change your_color to your desired color
         titleView.setGravity(Gravity.CENTER);
         titleView.setText("BONUS WORDS");
     }
 
     private void configureDefinitionView(){
         definitionView.setTextSize(20); // Change 20 to your desired font size
-        definitionView.setTextColor(Utils.TEXT_200); // Change your_color to your desired color
-        definitionView.setTypeface(null, Typeface.NORMAL);
-        definitionView.setBackgroundColor(Utils.PRIMARY_200);
+        definitionView.setTextColor(Utils.GetTextDefinitionColor()); // Change your_color to your desired color
+        definitionView.setBackgroundColor(Utils.PRIMARY_100);
         definitionView.setGravity(Gravity.LEFT);
     }
 

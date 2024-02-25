@@ -3,30 +3,26 @@ package org.colowords;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Color;
-import android.graphics.Interpolator;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Utils {
 
     public static int PRIMARY_100;
     public static int PRIMARY_200;
     public static int PRIMARY_300;
-    public static int ACCENT_100 ;
-    public static int ACCENT_200 ;
+    public static int ACCENT_100;
+    public static int ACCENT_200;
     public static int TEXT_100;
     public static int TEXT_200;
     public static int BG_100;
     public static int BG_200;
     public static int BG_300;
-
     public static int TRANSPARENT = Color.parseColor("#00000000");
 
     // Word size constants.
@@ -41,14 +37,17 @@ public class Utils {
 
     private static List<Typeface> TYPEFACES;
     private static List< List<Integer> > STYLES;
-    private static final int MAX_FONT_INDEX_TO_LOAD_OTF = 11;
-    private static final int MAX_FONT_INDEX_TO_LOAD_TTF = 21;
+    private static final int MAX_FONT_INDEX_TO_LOAD_OTF = 0;
+    private static final int MAX_FONT_INDEX_TO_LOAD_TTF = 37;
 
     private static int SELECTED_STYLE;
     private static int SELECTED_FONT_LETTERS  = 7;
     private static int SELECTED_FONT_MESSAGES = 7;
     private static int SELECTED_FONT_UI       = 7;
     private static int STYLE_COLOR_NUMBER     = 10;
+    private static int STYLE_DISPLAY_LETTER_OVERRIDE = -1;
+    private static int STYLE_HINTED_LETTER_OVERRIDE = -1;
+    private static int STYLE_TEXT_DEF_OVERRIDE = -1;
 
     public interface AnimationInterface {
         public void startAnimation(int id);
@@ -84,6 +83,9 @@ public class Utils {
         Preferences.Save(context,Preferences.KEY_LETTER_FONT,Integer.toString(SELECTED_FONT_LETTERS));
         Preferences.Save(context,Preferences.KEY_MESSAGE_FONT, Integer.toString(SELECTED_FONT_MESSAGES));
         Preferences.Save(context,Preferences.KEY_UI_FONT,Integer.toString(SELECTED_FONT_UI));
+        Preferences.SaveAsInt(context,Preferences.KEY_DL_OVERRIDE,STYLE_DISPLAY_LETTER_OVERRIDE);
+        Preferences.SaveAsInt(context,Preferences.KEY_HL_OVERRIDE, STYLE_HINTED_LETTER_OVERRIDE);
+        Preferences.SaveAsInt(context,Preferences.KEY_TEXT_OVERRIDE,STYLE_TEXT_DEF_OVERRIDE);
     }
 
     public static void LoadStylePreferences(Context context){
@@ -92,11 +94,17 @@ public class Utils {
         SELECTED_FONT_LETTERS = Integer.parseInt("0" + Preferences.GetPreference(context,Preferences.KEY_LETTER_FONT));
         SELECTED_FONT_MESSAGES = Integer.parseInt("0" + Preferences.GetPreference(context,Preferences.KEY_MESSAGE_FONT));
         SELECTED_STYLE = Integer.parseInt("0" + Preferences.GetPreference(context,Preferences.KEY_STYLE));
+        // These are not done as string because we want to store and retrieve the -1. We implemented it after
+        // And did not feel like changing all other uses.
+        STYLE_DISPLAY_LETTER_OVERRIDE = Preferences.GetAsInt(context,Preferences.KEY_DL_OVERRIDE);
+        STYLE_HINTED_LETTER_OVERRIDE = Preferences.GetAsInt(context,Preferences.KEY_HL_OVERRIDE);
+        STYLE_TEXT_DEF_OVERRIDE = Preferences.GetAsInt(context,Preferences.KEY_TEXT_OVERRIDE);
         ChangeStyle();
     }
 
     private static void ChangeStyle(){
         List<Integer> style = STYLES.get(SELECTED_STYLE);
+        // Changing style resets override values to default.
         PRIMARY_100 = style.get(0);
         PRIMARY_200 = style.get(1);
         PRIMARY_300 = style.get(2);
@@ -107,6 +115,27 @@ public class Utils {
         BG_100      = style.get(7);
         BG_200      = style.get(8);
         BG_300      = style.get(9);
+    }
+
+    public static int GetDisplayLetterColor() {
+        if (STYLE_DISPLAY_LETTER_OVERRIDE != -1) {
+            return STYLES.get(SELECTED_STYLE).get(STYLE_DISPLAY_LETTER_OVERRIDE);
+        }
+        else return PRIMARY_100;
+    }
+
+    public static int GetHintedLetterColor(){
+        if (STYLE_HINTED_LETTER_OVERRIDE != -1) {
+            return STYLES.get(SELECTED_STYLE).get(STYLE_HINTED_LETTER_OVERRIDE);
+        }
+        else return TEXT_200;
+    }
+
+    public static int GetTextDefinitionColor(){
+        if (STYLE_TEXT_DEF_OVERRIDE != -1) {
+            return STYLES.get(SELECTED_STYLE).get(STYLE_TEXT_DEF_OVERRIDE);
+        }
+        else return TEXT_200;
     }
 
     private static List<Integer> ListFromStyleString(String color_list){
@@ -124,12 +153,13 @@ public class Utils {
 
     public static void LoadTypeFaces(AssetManager asm){
         TYPEFACES = new ArrayList<>();
-        for (int i = 0; i <= MAX_FONT_INDEX_TO_LOAD_OTF; i++){
-            String name;
-            if (i < 10) name = "0" + Integer.toString(i);
-            else name = Integer.toString(i);
-            TYPEFACES.add(Typeface.createFromAsset(asm,name + ".otf"));
-        }
+
+//        for (int i = 0; i <= MAX_FONT_INDEX_TO_LOAD_OTF; i++){
+//            String name;
+//            if (i < 10) name = "0" + Integer.toString(i);
+//            else name = Integer.toString(i);
+//            TYPEFACES.add(Typeface.createFromAsset(asm,name + ".otf"));
+//        }
 
         for (int i = 0; i <= MAX_FONT_INDEX_TO_LOAD_TTF; i++){
             String name;
@@ -140,7 +170,32 @@ public class Utils {
 
         // Mono is added at the end.
         TYPEFACES.add(Typeface.create("Mono",Typeface.BOLD));
+    }
 
+    public static Typeface GetSystemTypeFace(){
+        // Mono is always the last one.
+        return TYPEFACES.get(TYPEFACES.size()-1);
+    }
+
+    public static void nextDisplayLetterColor(){
+        STYLE_DISPLAY_LETTER_OVERRIDE++;
+        if (STYLE_DISPLAY_LETTER_OVERRIDE == STYLE_COLOR_NUMBER) {
+            STYLE_DISPLAY_LETTER_OVERRIDE = 0;
+        }
+    }
+
+    public static void nextTextDefColor(){
+        STYLE_TEXT_DEF_OVERRIDE++;
+        if (STYLE_TEXT_DEF_OVERRIDE == STYLE_COLOR_NUMBER) {
+            STYLE_TEXT_DEF_OVERRIDE = 0;
+        }
+    }
+
+    public static void nextHintedLetterColor(){
+        STYLE_HINTED_LETTER_OVERRIDE++;
+        if (STYLE_HINTED_LETTER_OVERRIDE == STYLE_COLOR_NUMBER) {
+            STYLE_HINTED_LETTER_OVERRIDE = 0;
+        }
     }
 
     public static void nextTypeFaceUI(){
@@ -157,6 +212,12 @@ public class Utils {
 
     public static void nextStyle(){
         SELECTED_STYLE++;
+
+        // The values are only reset when the display style is changed.
+        STYLE_TEXT_DEF_OVERRIDE = -1;
+        STYLE_DISPLAY_LETTER_OVERRIDE = -1;
+        STYLE_HINTED_LETTER_OVERRIDE = -1;
+
         if (SELECTED_STYLE == STYLES.size()) SELECTED_STYLE = 0;
         ChangeStyle();
     }

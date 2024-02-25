@@ -38,13 +38,12 @@ public class WordListAdapter extends ArrayAdapter<String> {
         TextView textView = itemView.findViewById(android.R.id.text1);
 
         textView.setTypeface(null, Typeface.BOLD);
+        textView.setTextColor(Utils.GetTextDefinitionColor());
         if (position == this.selected){
-            textView.setTextColor(Utils.ACCENT_100); // Change your_color to your desired color
-            textView.setBackgroundColor(Utils.PRIMARY_100);
+            textView.setBackgroundColor(Utils.PRIMARY_300);
         }
         else {
-            textView.setTextColor(Utils.TEXT_200); // Change your_color to your desired color
-            textView.setBackgroundColor(Utils.PRIMARY_200);
+            textView.setBackgroundColor(Utils.PRIMARY_100);
         }
         textView.setGravity(Gravity.CENTER);
 

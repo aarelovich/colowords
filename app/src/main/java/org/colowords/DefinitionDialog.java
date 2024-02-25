@@ -38,8 +38,8 @@ public class DefinitionDialog extends Dialog {
         secondScrollView = findViewById(R.id.secondWordScroll);
         firstScrollView = findViewById(R.id.firstWordScroll);
 
-        firstScrollView.setBackgroundColor(Utils.PRIMARY_200);
-        secondScrollView.setBackgroundColor(Utils.PRIMARY_200);
+        firstScrollView.setBackgroundColor(Utils.PRIMARY_100);
+        secondScrollView.setBackgroundColor(Utils.PRIMARY_100);
 
         this.configureDefinitionTextView(secondDefinition);
         this.configureDefinitionTextView(firstDefinition);
@@ -128,17 +128,16 @@ public class DefinitionDialog extends Dialog {
 
     private void configureDefinitionTextView(TextView tv){
         tv.setTextSize(20); // Change 20 to your desired font size
-        tv.setTextColor(Utils.TEXT_100); // Change your_color to your desired color
-        tv.setTypeface(null, Typeface.NORMAL);
-        tv.setBackgroundColor(Utils.PRIMARY_200);
+        tv.setBackgroundColor(Utils.PRIMARY_100);
+        tv.setTextColor(Utils.GetTextDefinitionColor()); // Change your_color to your desired color
         tv.setGravity(Gravity.LEFT);
         tv.setWidth(getWidth());
     }
 
     private void configureWordTextView(TextView tv){
         tv.setTypeface(null, Typeface.BOLD_ITALIC);
-        tv.setBackgroundColor(Utils.TEXT_200);
-        tv.setTextColor(Utils.PRIMARY_200); // Change your_color to your desired color
+        tv.setBackgroundColor(Utils.PRIMARY_200);
+        tv.setTextColor(Utils.GetTextDefinitionColor()); // Change your_color to your desired color
         tv.setWidth(getWidth());
         tv.setGravity(Gravity.LEFT);
     }
