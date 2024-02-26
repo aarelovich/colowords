@@ -2,13 +2,16 @@ package org.colowords;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.Window;
+
 import java.util.HashMap;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     private GameScreen gameScreen;
     private CrossWordGenerator crosswordGenerator;
@@ -19,6 +22,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         // I use the device resolution for everything, so I get it first.
         // Then I use it for the game screen.
@@ -53,14 +58,14 @@ public class MainActivity extends AppCompatActivity {
         this.loadDictionaryCurrentLanguage();
 
         // this.makeNewPuzzle();
-        this.gameScreen.reloadState();
+        if (!this.gameScreen.reloadState()) this.makeNewPuzzle();
 
     }
 
 
     private void loadDictionaryCurrentLanguage(){
         String language = Preferences.GetPreference(this,Preferences.KEY_LANGUAGE);
-        // language = "EN";
+        if (language == "") language = "en";
         if (!LanguageDictionary.LoadDictionary(this,language.toLowerCase())){
             System.err.println("Dictionary is not loaded. Cannot continue");
         }

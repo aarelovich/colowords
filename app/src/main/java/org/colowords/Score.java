@@ -19,6 +19,8 @@ public class Score {
         this.scoreLine = new Rect(l,t,l+width,t+height/2);
         this.multLine  = new Rect(l,t+height/2,l+width,t+height);
         this.rHelper = new AnimatorHelper();
+        this.score = "0";
+        this.multiplier = "x1";
         //System.err.println("Computed score line at " + this.scoreLine.toString());
     }
 

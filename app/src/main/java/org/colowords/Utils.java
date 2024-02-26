@@ -255,6 +255,9 @@ public class Utils {
      * @return the value to pass to the setTextSize of the paint object passed.
      */
     public static float GetTextSizeToFitRect(String text, float width, float height, Paint paint) {
+
+        if (text == null) text = "A";
+
         // Start with an initial guess for text size
         float textSize = 100f;
 

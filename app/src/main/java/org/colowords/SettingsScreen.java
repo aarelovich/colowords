@@ -46,6 +46,15 @@ public class SettingsScreen {
         int effectiveWidth    = (width_for_display-2*horizontalMargin);
         int effectiveRight    = horizontalMargin + effectiveWidth;
         int verticalAir       = (int)(0.03*height);
+        int effectiveH        = height - verticalAir; // So that we don't touch the bottom
+
+        int hMessage          = (int)(0.05f*effectiveH);
+        int hDef              = (int)(0.30f*effectiveH);
+        int hCWord            = (int)(0.08f*effectiveH);
+        int hWheel            = (int)(0.2*effectiveH);
+        int hExtraInd         = (int)(0.1f*effectiveH);
+        int hScore            = (int)(0.1f*effectiveH);
+
 
         this.divisorDef = new RectF(effectiveRight+horizontalMargin,0.01f*height,effectiveRight+horizontalMargin+divisorWidth,0.99f*height);
 
@@ -53,15 +62,14 @@ public class SettingsScreen {
         int x,y,w,h,d;
 
         // The banner up top
-        int bannerH = (int)(height*0.05f);
-        this.banner = new Banner(horizontalMargin,0,effectiveWidth,bannerH);
+        this.banner = new Banner(horizontalMargin,0,effectiveWidth,hMessage);
         this.banner.setMessage("MESSAGE!");
 
-        d = (int)(effectiveWidth*0.2f);
+        d = (hDef-2*verticalAir)/3;
         x = horizontalMargin*2 + d/2;
 
         // Dropdown with options
-        y = bannerH + verticalAir + d/2;
+        y = hMessage + verticalAir + d/2;
         this.dropDown = new CircleDropDown(x,y,d);
         this.dropDown.addOptions("OPT1");
         this.dropDown.addOptions("OPT2");
@@ -84,45 +92,41 @@ public class SettingsScreen {
         // And the text and definitions view.
         w = effectiveRight - horizontalMargin*7 - d;
         x = effectiveRight - w - horizontalMargin*2;
-        int top = bannerH + verticalAir;
+        int top = hMessage + verticalAir;
         h = (int)(0.05f*height);
         this.titleViewDef = new RectF(x,top,x+w,top+h);
         top = top+h;
-        int mustOccupy = verticalAir*2 + d*3;
-        h = mustOccupy - h;
+        h = hDef - h;
         this.defViewDef   = new RectF(x,top,x+w,top+h);
 
         // The current word
         w = (int)(effectiveWidth*0.5f);
-        h = (int)(height*0.08f);
         x = (effectiveWidth - w)/2 + horizontalMargin;
         y = y + d/2 + verticalAir;
-        this.madeWord = new CurrentWord(x,y,w,h);
+        this.madeWord = new CurrentWord(x,y,w,hCWord);
         this.madeWord.setWord("EXAMPLE");
 
         // The letter wheel.
         x = effectiveWidth/2 + horizontalMargin;
-        d = (int)(effectiveWidth*0.6f);
-        y = y + h + verticalAir + d/2;
-        this.letterWheel = new LetterWheel(x,y,d);
+        int wheelD = Math.min(hWheel,(effectiveWidth - 4*verticalAir));
+        y = y + hCWord + verticalAir + wheelD/2;
+        this.letterWheel = new LetterWheel(x,y,wheelD);
         ArrayList<String> letters = new ArrayList<>();
         letters.add("A"); letters.add("B"); letters.add("C"); letters.add("D");
         this.letterWheel.setLetters(letters);
 
         // The extra indicator.
         x = effectiveWidth/2 + horizontalMargin;
-        y = y + d/2 + verticalAir;
-        d = (int)(effectiveWidth*0.4f);
+        y = y + wheelD/2 + verticalAir;
         y = y + d/2;
-        this.extraIndicator = new ExtraWordIndicator(x,y,d);
+        this.extraIndicator = new ExtraWordIndicator(x,y,hExtraInd);
         this.extraIndicator.setNumber(23,70);
 
         // The Score.
         y = y + d/2 + verticalAir;
         w = (int)(0.6f*effectiveWidth);
-        h = (int)(0.1f*height);
         x = (effectiveWidth - w)/2 + horizontalMargin;
-        this.score = new Score(y,x,w,h,null);
+        this.score = new Score(y,x,w,hScore,null);
         this.score.updateValues(3456789,12);
 
         ///////////////////////////// RIGHT SIDE /////////////////////////////
