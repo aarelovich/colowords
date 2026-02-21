@@ -1,5 +1,6 @@
 package org.colowords;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Canvas;
@@ -18,6 +19,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -39,6 +41,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
     private NewGameListener newGameListener;
     private Banner banner;
     private RectF highScoreTextRect;
+    private int[] letterToHighLight;
     private final String appStateFile = "appstate.txt";
 
     TimerTask timerTaskObj = new TimerTask() {
@@ -67,6 +70,8 @@ public class GameScreen extends View implements Utils.AnimationInterface {
 
         this.letterGridGeometry = new Rect(x,y,x+w,y+h); // The geometry is necessary with every configuration.
         this.letterGrid = new LetterGrid();
+
+        this.letterToHighLight = new int[]{0,0,0};
 
         // Now the current word
         int verticalMargin = (int)(height*0.01f);
@@ -119,7 +124,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         y = (int)(height*0.05);
         this.langSelector = new CircleDropDown(x,y,d);
         this.langSelector.addOptions("EN");
-        this.langSelector.addOptions("ES");
+        //this.langSelector.addOptions("ES"); // We are removing spanish for now.
         this.langSelector.setCurrentOption(Preferences.GetPreference(getContext(),Preferences.KEY_LANGUAGE));
 
         // The new game button.
@@ -153,8 +158,10 @@ public class GameScreen extends View implements Utils.AnimationInterface {
     public void setNewCrossWord(CrossWordGrid cwg, List<String> extras){
         this.letterGrid.configureGrid(this.letterGridGeometry,cwg.getDimensions(),cwg.getCrossWord(),extras);
         this.extraIndicator.setNumber(extras.size(),extras.size());
-        this.scoreIndicator.updateValues(0,1);
+        String highlightedWord = this.scoreIndicator.setScoreLogic(cwg,extras);
         this.newGameButton.setVisible(false);
+        int[] params = this.letterGrid.highlightWord(highlightedWord);
+        if (params != null) this.letterToHighLight = params;
         this.storeState();
     }
 
@@ -212,7 +219,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
             return;
         }
 
-        if (word != "") {
+        if (!Objects.equals(word, "")) {
             this.invalidate();
             //System.err.println("[DBUG] Word Start '" + word + "'");
             this.currentWord.setWord(word);
@@ -312,13 +319,15 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         }
 
         int code = this.letterGrid.fingerUp();
+
         if (code == LetterGrid.PRESS_ACTION_HINT){
           // A letter was hinted.
           this.storeState();
 
           // We update the score and multiplier.
-          List<Integer> score_data = this.letterGrid.getScoreAndMultiplier();
-          this.scoreIndicator.updateValues(score_data.get(0),score_data.get(1));
+          for (String w : this.letterGrid.getLastSetOfAffectedWords()) {
+              this.scoreIndicator.scoreLogic.letterHinted(w);
+          }
 
           this.invalidate();
           return;
@@ -328,6 +337,11 @@ public class GameScreen extends View implements Utils.AnimationInterface {
             dd.show();
             List<GridWord> words = this.letterGrid.getDefinitionRequests();
             dd.setDefinitionsFromGridWord(words);
+
+            for (GridWord gw : words) {
+                this.scoreIndicator.scoreLogic.definitionHinted(gw.getString());
+            }
+
             this.invalidate(); // Turn off the light.
             return;
         }
@@ -356,7 +370,15 @@ public class GameScreen extends View implements Utils.AnimationInterface {
 
 
             if (code == LetterGrid.WORD_EXTRA){
+                this.scoreIndicator.updateScoreExtra(word);
                 this.extraIndicator.decreaseNumber();
+            }
+            else {
+                // Regular word found.
+                String hl_word = this.scoreIndicator.updateScore(word);
+                if (!Objects.equals(hl_word, "")){
+                    this.letterToHighLight = this.letterGrid.highlightWord(hl_word);
+                }
             }
 
             this.storeState();
@@ -364,16 +386,17 @@ public class GameScreen extends View implements Utils.AnimationInterface {
             // We check if we are done
             if (this.letterGrid.isPuzzleDone()){
                 System.err.println("Puzzle Finished");
-                List<Integer> score_and_mult = this.letterGrid.getScoreAndMultiplier();
-                Preferences.Save(getContext(),Preferences.KEY_MAX_SCORE,score_and_mult.get(0).toString());
+
+                int highestStoredScore = Preferences.GetAsInt(getContext(),Preferences.KEY_MAX_SCORE);
+                int currentScore = this.scoreIndicator.scoreLogic.getCurrentScore();
+                if (currentScore > highestStoredScore){
+                    Preferences.Save(getContext(),Preferences.KEY_MAX_SCORE,String.valueOf(currentScore));
+                }
+
                 this.letterGrid.markAllExtrasAsFound();
                 this.newGameButton.setVisible(true);
             }
         }
-
-        // We update the score and multiplier.
-        List<Integer> score_data = this.letterGrid.getScoreAndMultiplier();
-        this.scoreIndicator.updateValues(score_data.get(0),score_data.get(1));
 
         this.invalidate();
         //System.err.println("[DBUG] Word Formed: '" + word + "'");
@@ -389,7 +412,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         }
 
         // We paint the background color
-        Paint paint = new Paint();
+        @SuppressLint("DrawAllocation") Paint paint = new Paint();
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Utils.BG_100);
         canvas.drawPaint(paint);
@@ -406,6 +429,25 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         this.renderScore(canvas);
         this.banner.render(canvas); // Banner must be on top.
         this.settingsButton.render(canvas);
+
+        // The last thing we render is the highlight.
+        if (this.letterToHighLight != null){
+
+            // This mimics the render drawing of a grid square.
+
+            int x = this.letterToHighLight[0];
+            int y = this.letterToHighLight[1];
+            int d = this.letterToHighLight[2];
+            float R = d/2.0f;
+            float r = R*0.3f;
+            float strokeWidth = d*0.1f;
+
+            paint.setColor(Utils.HIGH_CONTRAST);
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(strokeWidth);
+            canvas.drawRoundRect(x - R,y - R,x + R,y + R,r,r,paint);
+
+        }
 
     }
 
@@ -467,6 +509,8 @@ public class GameScreen extends View implements Utils.AnimationInterface {
 
     public void storeState() {
         String state = letterGrid.saveState(this.letterWheel.getLetters());
+        state = state + "##" + this.scoreIndicator.scoreLogic.getStoreString();
+
         try {
             FileOutputStream fos = getContext().openFileOutput(this.appStateFile,Context.MODE_PRIVATE);
             fos.write(state.getBytes(StandardCharsets.UTF_8));
@@ -501,13 +545,25 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         // Only request a new game when we are done.
         this.newGameButton.setVisible(false);
 
+        String[] parts = state.split("##");
+        String gridState = parts[0];
+
         // Now we reload the state.
-        ArrayList<String> forWheel = this.letterGrid.restoreFromState(this.letterGridGeometry,state);
+        ArrayList<String> forWheel = this.letterGrid.restoreFromState(this.letterGridGeometry,gridState);
 
         if (forWheel.isEmpty()){
             System.err.println("Unable to load the restore state. Generating a new game");
             this.newGameButton.setVisible(true);
             return false;
+        }
+
+        if (parts.length > 1) {
+            String hgWord = this.scoreIndicator.scoreLogic.restoreFromState(parts[1]);
+            this.scoreIndicator.syncScore();
+            int[] params = this.letterGrid.highlightWord(hgWord);
+            if (params != null) {
+                this.letterToHighLight = params;
+            }
         }
 
         this.letterWheel.setLetters(forWheel);
@@ -517,10 +573,6 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         int remaining = total_extra - total_extra_found;
 
         this.extraIndicator.setNumber(remaining,total_extra);
-
-        // We update the score and multiplier.
-        List<Integer> score_data = this.letterGrid.getScoreAndMultiplier();
-        this.scoreIndicator.updateValues(score_data.get(0),score_data.get(1));
 
         // Everything loaded correctly, but puzzle is finished. We need a new one.
         if (this.letterGrid.isPuzzleDone()) {

@@ -40,11 +40,12 @@ public class CrossWordGenerator {
 
     public void setWordList(String[] word_list){
         words.clear();
-        for (int i = 0; i < word_list.length; i++){
-            String word = word_list[i];
+        if (word_list == null) return;
+
+        for (String word : word_list) {
             int l = word.length();
-            if (!words.containsKey(l)){
-                words.put(l,new ArrayList<String>());
+            if (!words.containsKey(l)) {
+                words.put(l, new ArrayList<String>());
             }
             words.get(l).add(word);
         }

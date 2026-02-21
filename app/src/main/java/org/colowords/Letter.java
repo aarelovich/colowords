@@ -15,7 +15,6 @@ public class Letter {
     private static final int LETTER_STATE_HIDDEN   = 0;
     private static final int LETTER_STATE_HINTED   = 1;
     private static final int LETTER_STATE_REVEALED = 2;
-
     private String letter;
     private int selectionOrder;
     private int x;
@@ -120,6 +119,10 @@ public class Letter {
         this.d = d;
         this.R = d/2;
 
+    }
+
+    public int[] getGeometry() {
+        return new int[] {x, y, d};
     }
 
     public boolean isLetterBeingTouched(int x, int y){

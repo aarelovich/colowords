@@ -2,10 +2,14 @@ package org.colowords;
 
 import android.content.Context;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class LanguageDictionary {
 
@@ -15,33 +19,39 @@ public class LanguageDictionary {
 
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new InputStreamReader(context.getAssets().open(lang_code + "_words.txt")));
+            reader = new BufferedReader(new InputStreamReader(context.getAssets().open(lang_code + ".json")));
 
             // do reading, usually loop until end of file reading
-            String word;
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+            String jsonString = sb.toString();
+
+            // Now we parse the JSON string.
+            JSONObject jsonObject = new JSONObject(jsonString);
 
             if (dictionary == null) dictionary = new HashMap<>();
             else dictionary.clear();
 
-            while ((word = reader.readLine()) != null) {
-                String[] word_and_def = word.split("\\|");
-                String[] def_and_word;
-                if (word_and_def.length == 2) {
-                    def_and_word = new String[1];
-                }
-                else if (word_and_def.length == 3){
-                    def_and_word = new String[2];
-                    def_and_word[1] = word_and_def[2];
-                }
-                else continue;
-                def_and_word[0] = word_and_def[1];
-                dictionary.put(word_and_def[0],def_and_word);
-            }
+            // We now iterate over each word.
+            Iterator<String> words = jsonObject.keys();
 
+            while (words.hasNext()) {
+                String word = words.next();
+                JSONArray definitionList = jsonObject.getJSONArray(word);
+                StringBuilder definition = new StringBuilder();
+                for (int i = 0; i < definitionList.length(); i++){
+                    definition.append(Integer.toString(i+1)).append(". ").append(definitionList.getString(i));
+                    if (i < definitionList.length() - 1) definition.append("\n");
+                }
+                dictionary.put(word.toUpperCase(),new String[]{definition.toString()});
+            }
             System.err.println("Finished Loading Dictionary from lang code '" + lang_code + "' With: " + Integer.toString(dictionary.size()) + " words");
 
         }
-        catch (IOException e) {
+        catch (Exception e) {
             System.err.println("Failed loading information from input stream. Reason " + e.getMessage());
             return false;
         }

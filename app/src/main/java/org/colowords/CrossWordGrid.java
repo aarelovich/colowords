@@ -1,14 +1,30 @@
 package org.colowords;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class CrossWordGrid {
+
+   private class GridPlacementReturn {
+      public boolean success;
+      public String placedWord;
+      public String intersectinWord;
+
+      public GridPlacementReturn(){
+         this.success = false;
+         this.placedWord = "";
+         this.intersectinWord = "";
+      }
+
+   }
 
    /////////// Private Variables. 
    private ArrayList<GridWord> words;
    private ArrayList<Integer>  occupiedSpaces;
    private GridSize gridSize;
    private List<String> wordsUnableToPlace;
+   private HashMap<String, List<String> > wordIntersections;
 
    private final int STARTING_NUMBER_OF_ROWS     = 50;
    private final int STARTING_NUMBER_OF_COLUMNS  = 50;
@@ -21,6 +37,7 @@ public class CrossWordGrid {
       this.gridSize = new GridSize(0, 0);
       this.occupiedSpaces = new ArrayList<>();
       this.wordsUnableToPlace = new ArrayList<>();
+      this.wordIntersections = new HashMap<>();
    }
 
    /**
@@ -44,7 +61,7 @@ public class CrossWordGrid {
    }
 
    /**
-    * These words are used as extra words if the exist. 
+    * These words are used as extra words if to exist.
     * @return
     */
    public List<String> getWordsUnableToPlace() {
@@ -132,25 +149,30 @@ public class CrossWordGrid {
 
    }
 
-   public boolean placeWords(List<String> wordList){
+   public HashMap<String, List<String> > getWordIntersections(){
+      return this.wordIntersections;
+   }
+
+   public void placeWords(List<String> wordList){
 
       // Resetting all variables. 
       this.gridSize.adjustGrid(STARTING_NUMBER_OF_ROWS,STARTING_NUMBER_OF_COLUMNS);
       this.occupiedSpaces.clear();
       this.words.clear();
       this.wordsUnableToPlace.clear();
+      this.wordIntersections.clear();
 
       // No words were passed. 
-      if (wordList.size() == 0){
+      if (wordList.isEmpty()){
          this.adjustGridSize();
-         return true;
+         return;
       }
 
       // Special case of only one word. Nothing to do really. 
       if (wordList.size() == 1){
          this.words.add(new GridWord(wordList.get(0), 0,0, true));
          this.adjustGridSize();
-         return true;
+         return;
       }
 
       // WE need to sort the words by size. IN this way we attempt to place the longest words first, which are the hardest to place. 
@@ -175,15 +197,18 @@ public class CrossWordGrid {
       // And now we try to fit all words. 
       int takeIndex = 0;
 
-      while (wordList.size() > 0){
+      while (!wordList.isEmpty()){
 
          // We get the next word.
          String nextWord = wordList.get(takeIndex);
 
          // We try to place it
-         if (this.placeWord(nextWord)){
+         GridPlacementReturn gpr = this.placeWord(nextWord);
+         if (gpr.success){
 
-            // We succeded in placing it so now we take it out. 
+            this.addBothWordsToIntersectionList(gpr.placedWord, gpr.intersectinWord);
+
+            // We succeeded in placing it so now we take it out.
             wordList.remove(takeIndex);
             takeIndex = 0;
 
@@ -198,10 +223,8 @@ public class CrossWordGrid {
          }
 
       }
-      
-      for (String w: wordList){
-         this.wordsUnableToPlace.add(w);
-      }
+
+      this.wordsUnableToPlace.addAll(wordList);
 
       System.err.println("Finished Placing. Unable to place the following words: " + wordsUnableToPlace);
 
@@ -209,11 +232,16 @@ public class CrossWordGrid {
       this.adjustWordList();
       //this.adjustGridSize();
 
-      return true;
-
-   }   
+   }
 
    ////////////// Private Functions.
+
+   private void addBothWordsToIntersectionList(String wordA, String wordB) {
+      if (!this.wordIntersections.containsKey(wordA)) this.wordIntersections.put(wordA, new ArrayList<>());
+      if (!this.wordIntersections.containsKey(wordB)) this.wordIntersections.put(wordB, new ArrayList<>());
+      Objects.requireNonNull(this.wordIntersections.get(wordA)).add(wordB);
+      Objects.requireNonNull(this.wordIntersections.get(wordB)).add(wordA);
+   }
 
    /**
     * The placing algorithm puts the words in a very large grid.
@@ -273,18 +301,24 @@ public class CrossWordGrid {
    }      
 
    /**
-    * This is the main placing algorithm. It will attempt to place the word in the current context by trying out all possible locations that intersect with existing words.
-    * It will stop at the first it finds and add it. If it succeeds it will return true, otherwise it will return false. 
+    * This is the main placing algorithm. It will attempt to place the word in the current context
+    * by trying out all possible locations that intersect with existing words.
+    * It will stop at the first it finds and add it.
+    * If it succeeds it will return true, otherwise it will return false.
     * @param word - The word to place
-    * @return True if successfull, false otherwise. 
+    * @return True if successfull, false otherwise.
     */
-   private boolean placeWord(String word){
+   private GridPlacementReturn placeWord(String word){
+
+      GridPlacementReturn gpr = new GridPlacementReturn();
 
       if (GEN_DEBUG) System.err.println("PLACE WORD: " + word);
 
       for (GridWord gw : this.words){
          
          if (GEN_DEBUG) System.err.println("- Intersecting with " + gw.getString());
+
+         //System.err.println("PLACING WORD '" + word + "'. Attempting to intersect with " + gw.toString() + ".");
          
          // We get all the possibilities.
          List<GridWord> possibilities = gw.listIntersectingGridWords(word);
@@ -295,6 +329,11 @@ public class CrossWordGrid {
             if (GEN_DEBUG) System.err.println("-  Possibility: " + possibility.toString());
 
             if (canWordBePlaced(possibility)){
+
+               //System.err.println("PLACED. Word '" + word + "' will intersect with " + gw.toString() + ".");
+               gpr.placedWord = word;
+               gpr.intersectinWord = gw.getString();
+               gpr.success = true;
                
                // We got it. So we add it to the list. 
                this.words.add(possibility);
@@ -303,14 +342,14 @@ public class CrossWordGrid {
                fillOccupiedSpaces();
 
                // And we return.
-               return true;
+               return gpr;
             }
 
          }
 
       }
 
-      return false;
+      return gpr;
 
    }
 

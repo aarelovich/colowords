@@ -127,7 +127,6 @@ public class SettingsScreen {
         w = (int)(0.6f*effectiveWidth);
         x = (effectiveWidth - w)/2 + horizontalMargin;
         this.score = new Score(y,x,w,hScore,null);
-        this.score.updateValues(3456789,12);
 
         ///////////////////////////// RIGHT SIDE /////////////////////////////
         int verticalMargin = (int)(height*0.02f);

@@ -5,14 +5,17 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 
+import java.util.List;
+
 public class Score {
 
     private String score;
-    private String multiplier;
+    private String maximumPossibleScore;
     private Utils.AnimationInterface ai;
     private AnimatorHelper rHelper;
     private Rect scoreLine;
     private Rect multLine;
+    public Scoring scoreLogic;
 
     public Score (int t, int l, int width, int height, Utils.AnimationInterface ai){
         this.ai = ai;
@@ -20,22 +23,31 @@ public class Score {
         this.multLine  = new Rect(l,t+height/2,l+width,t+height);
         this.rHelper = new AnimatorHelper();
         this.score = "0";
-        this.multiplier = "x1";
-        //System.err.println("Computed score line at " + this.scoreLine.toString());
+        this.maximumPossibleScore = "0";
+        this.scoreLogic = new Scoring();
     }
 
-    public void updateValues(int s, int m){
-        String newscore = Integer.toString(s);
-        String oldscore = this.score;
-        this.score = newscore;
-        this.multiplier = "x" + Integer.toString(m);
-        // We only start the animation if the score changed and the animation interface is not null
-        if (this.ai == null) return;
-        if (!newscore.equals(oldscore)){
-            if (this.rHelper.computeAnimationSteps(this.scoreLine,2,200,Utils.ANIMATION_TICK_LENGTH)){
-                if (ai != null) ai.startAnimation(Utils.ANIMATION_ID_SCORE);
-            }
-        }
+    public String setScoreLogic(CrossWordGrid cwg, List<String> extraWords){
+        String highlightWord = this.scoreLogic.createScoringData(cwg.getWordIntersections());
+        this.scoreLogic.setMaximumPossibleScore(cwg.getWordIntersections(),extraWords);
+        System.err.println("MAXIMUM POSSIBLE SCORE: " + scoreLogic.getMaximumPossibleScore());
+        this.maximumPossibleScore = String.valueOf(scoreLogic.getMaximumPossibleScore());
+        return highlightWord;
+    }
+    public String updateScore(String foundWord) {
+        Scoring.GridWordFoundReturn gwf = this.scoreLogic.gridWordFound(foundWord);
+        this.score = String.valueOf(this.scoreLogic.getCurrentScore());
+        return gwf.highlightWord;
+    }
+
+    public void updateScoreExtra(String foundWord) {
+        this.scoreLogic.hiddenWordFound(foundWord);
+        this.syncScore();
+    }
+
+    public void syncScore() {
+        this.score = String.valueOf(this.scoreLogic.getCurrentScore());
+        this.maximumPossibleScore = String.valueOf(this.scoreLogic.getMaximumPossibleScore());
     }
 
     public void render(Canvas canvas){
@@ -61,7 +73,7 @@ public class Score {
         p.setColor(Utils.ACCENT_100);
         canvas.drawText(this.score,scoreBKG.left,scoreBKG.bottom,p);
         p.setColor(Utils.ACCENT_200);
-        canvas.drawText(this.multiplier,this.multLine.left,this.multLine.bottom,p);
+        canvas.drawText(this.maximumPossibleScore,this.multLine.left,this.multLine.bottom,p);
 
 
     }

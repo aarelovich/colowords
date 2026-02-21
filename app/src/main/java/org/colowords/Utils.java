@@ -23,11 +23,11 @@ public class Utils {
     public static int BG_100;
     public static int BG_200;
     public static int BG_300;
+    public static int HIGH_CONTRAST;
     public static int TRANSPARENT = Color.parseColor("#00000000");
 
     // Word size constants.
     static final int MAX_WORD_SIZE = 7;
-    static final int MIN_WORD_SIZE = 3;
     static final int ANIMATION_TICK_LENGTH= 20;
 
     // The animation IDS.
@@ -37,7 +37,6 @@ public class Utils {
 
     private static List<Typeface> TYPEFACES;
     private static List< List<Integer> > STYLES;
-    private static final int MAX_FONT_INDEX_TO_LOAD_OTF = 0;
     private static final int MAX_FONT_INDEX_TO_LOAD_TTF = 37;
 
     private static int SELECTED_STYLE;
@@ -115,6 +114,13 @@ public class Utils {
         BG_100      = style.get(7);
         BG_200      = style.get(8);
         BG_300      = style.get(9);
+
+        int[] colors = new int[style.size()];
+        for (int i = 0; i < style.size(); i++) {
+            colors[i] = style.get(i);
+        }
+
+        HIGH_CONTRAST = ContrastPicker.pickHighContrastColor(colors);
     }
 
     public static int GetDisplayLetterColor() {

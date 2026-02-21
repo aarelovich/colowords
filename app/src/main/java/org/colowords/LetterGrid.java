@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class LetterGrid {
 
@@ -27,10 +28,8 @@ public class LetterGrid {
     private List<String> wordsRemaining;
     private List<String> extraWords;
     private List<String> extraWordsFound;
-    private List<String> zeroPointWords;
     private List<GridWord> definitionRequests;
-    private int score;
-    private int multiplier;
+    private List<String> lastSetOfAffectedWords;
     private int letterBeingPressed;
     private final int STATE_INDEX_LETTERS      = 0;
     private final int STATE_INDEX_GRIDWORDS    = 1;
@@ -38,13 +37,8 @@ public class LetterGrid {
     private final int STATE_INDEX_REMAINING    = 3;
     private final int STATE_INDEX_LETTER_WHEEL = 4;
     private final int STATE_INDEX_EXTRA_WORDS  = 5;
-    private final int STATE_INDEX_SCORE        = 6;
-    private final int STATE_INDEX_MULT         = 7;
-    private final int STATE_INDEX_EXTRA_FOUND  = 8;
-    private final int STATE_INDEX_HINTED_WORDS = 9;
-    private final int STATE_SIZE               = 10;
-    private Map<Integer, Integer> SCORE_PER_WORD;
-    private final int BASE_WORD_VALUE          = 10;
+    private final int STATE_INDEX_EXTRA_FOUND  = 6;
+    private final int STATE_SIZE               = 7;
 
     public static final int PRESS_ACTION_NOTHING      = 0;
     public static final int PRESS_ACTION_HINT         = 1;
@@ -64,24 +58,36 @@ public class LetterGrid {
         this.wordsRemaining = new ArrayList<>();
         this.extraWords = new ArrayList<>();
         this.extraWordsFound = new ArrayList<>();
-        this.zeroPointWords = new ArrayList<>();
         this.definitionRequests = new ArrayList<>();
+        this.lastSetOfAffectedWords = new ArrayList<>();
         this.letterBeingPressed = -1;
-
-        // Creating the scoring structure. Basically the base value is for 3 letter words.
-        // Each increasing letter adds 10. So a 7 letter words is 50.
-        this.SCORE_PER_WORD = new HashMap<>();
-        for (int i = Utils.MIN_WORD_SIZE; i <= Utils.MAX_WORD_SIZE; i++ ){
-            this.SCORE_PER_WORD.put(i, (i - Utils.MIN_WORD_SIZE +1)*BASE_WORD_VALUE);
-        }
-
-        //System.err.println("SCORE STRUCT: " + this.SCORE_PER_WORD.toString());
     }
 
-    public List<Integer> getScoreAndMultiplier(){
-        List<Integer> pair = new ArrayList<>();
-        pair.add(score); pair.add(multiplier);
-        return pair;
+    public List<String> getLastSetOfAffectedWords(){
+        return this.lastSetOfAffectedWords;
+    }
+
+    public int[] highlightWord(String word) {
+
+        //System.err.println("HIGHLIGHT: Attempt to highlight: " + word);
+
+        for (GridWord gw: this.wordList) {
+            if (gw.getString().equals(word)){
+                // We got the word.
+                //System.err.println("   HIGHLIGHT: Found in word list " + word);
+                List<GridPoint> gps = gw.toGridPointList();
+                // We need to highlight the first letter.
+                if (!gps.isEmpty()) {
+                    //System.err.println("      HIGHLIGHT AT POS: " + gps.get(0).toString());
+                    int indexOfFirstLetter = this.gridSize.toIndex(gps.get(0));
+                    return  Objects.requireNonNull(this.letters.get(indexOfFirstLetter)).getGeometry();
+
+                }
+            }
+        }
+
+        return null;
+
     }
 
     public void markAllExtrasAsFound(){
@@ -121,10 +127,7 @@ public class LetterGrid {
         state.set(STATE_INDEX_LETTER_WHEEL,String.join("|",letters));
         state.set(STATE_INDEX_GRIDSIZE,this.gridSize.getStoreString());
         state.set(STATE_INDEX_EXTRA_WORDS,this.getStringToStoreFromList(this.extraWords));
-        state.set(STATE_INDEX_SCORE,Integer.toString(score));
         state.set(STATE_INDEX_EXTRA_FOUND,this.getStringToStoreFromList(this.extraWordsFound));
-        state.set(STATE_INDEX_HINTED_WORDS,this.getStringToStoreFromList(this.zeroPointWords));
-        state.set(STATE_INDEX_MULT,Integer.toString(multiplier));
 
         return String.join(">",state);
 
@@ -209,19 +212,6 @@ public class LetterGrid {
         // And we call configure with empty list. But they have already been filled.
         this.configureGrid(rect,this.gridSize,new ArrayList<GridWord>(),new ArrayList<>());
 
-        // We restore the multiplier and the score.
-        this.score = Integer.valueOf(parts[STATE_INDEX_SCORE]);
-        this.multiplier = Integer.valueOf(parts[STATE_INDEX_MULT]);
-
-        // We restore teh zero point words.
-        this.zeroPointWords.clear();
-        String[] tempZeroW = this.getStringArrayFromParsed(STATE_INDEX_HINTED_WORDS,parts);
-        if (tempZeroW != null){
-            for (String s: tempZeroW){
-                if (s.isEmpty()) continue;
-                this.zeroPointWords.add(s);
-            }
-        }
 
         // Finally we restore the letter wheel letters.
         String[] tempWheel = parts[STATE_INDEX_LETTER_WHEEL].split("\\|");
@@ -244,7 +234,6 @@ public class LetterGrid {
         }
         System.err.println("Restoring State. Remaining extra words: " + notfound);
         System.err.println("Restoring State. Extra words already found: " + found);
-        System.err.println("Restoring State. Zero Point Words: " + this.zeroPointWords);
         return ans;
 
     }
@@ -289,9 +278,6 @@ public class LetterGrid {
         this.wordsRemaining.clear();
         this.extraWords.clear();
         this.extraWordsFound.clear();
-        this.zeroPointWords.clear();
-        this.score = 0;
-        this.multiplier = 1;
 
         // We add the extra words.
         for (String ew: extraWords){
@@ -380,30 +366,14 @@ public class LetterGrid {
 
                         int index = gridSize.toIndex(l);
                         // System.err.println("Revealing letter at " + l.toString() + " - " + index + " for word: " + gw.toString());
-                        this.letters.get(index).revealLetter();
+                        Objects.requireNonNull(this.letters.get(index)).revealLetter();
 
                     }
 
                     // We remove the word from the list.
                     int index = wordsRemaining.indexOf(word);
                     if (index != -1) wordsRemaining.remove(index);
-
-                    // If this is a zero point letter the the multiplier is set to one and the score is not tallied.
-                    index = this.zeroPointWords.indexOf(word);
-                    if (index != -1){
-                        this.zeroPointWords.remove(index);
-                        System.err.println("Got a hinted letter. No points. Score: " + score + " And multiplier is " + multiplier);
-                        return WORD_CROSS_NO_SCORE;
-                    }
-                    else {
-                        // We add the score.
-                        this.score = this.score + multiplier*SCORE_PER_WORD.get(word.length());
-                        this.multiplier++;
-
-                        System.err.println("Got One! Score: " + score + " And multiplier is " + multiplier);
-                        return WORD_CROSS;
-                    }
-
+                    return WORD_CROSS;
 
                 }
 
@@ -417,27 +387,18 @@ public class LetterGrid {
                 if (this.extraWordsFound.get(index).equals("0")){
                     this.extraWordsFound.set(index,"1");
                     // Hidden words are double score
-                    this.score = this.score + multiplier*this.SCORE_PER_WORD.get(word.length())*2;
-                    this.multiplier++;
-                    System.err.println("EXTRA! Score: " + score + " And multiplier is " + multiplier);
+
                     return WORD_EXTRA;
                 }
                 else {
-                    decreaseMultiplier();
-                    System.err.println("EXTRA that has been found. Score " + score + " And multiplier is " + multiplier);
+                    System.err.println("EXTRA that has been found already");
                     return WORD_EXTRA_AGAIN;
                 }
             }
         }
 
-        decreaseMultiplier();
-        System.err.println("Missed. Score " + score + " multiplier " + multiplier);
         return WORD_NOT_A_WORD;
 
-    }
-
-    private void decreaseMultiplier(){
-        if (this.multiplier > 1) this.multiplier--;
     }
 
     public boolean isPuzzleDone(){
@@ -458,6 +419,7 @@ public class LetterGrid {
     }
 
     public int fingerUp(){
+
         if (letterBeingPressed == -1) return PRESS_ACTION_NOTHING;
 
         // System.err.println("Finger up after long press of  letter at: " + this.gridSize.fromIndex(letterBeingPressed).toString());
@@ -475,14 +437,9 @@ public class LetterGrid {
             List<GridWord> affectedWords = new ArrayList<>();
             for (GridWord gw: this.wordList){
                 if (!gw.getLetterAtPosition(gp.r,gp.c).isEmpty()){
-                    // The letter corresponds to this word. We se the hidden flag appropiately.
-                    if (this.wordsRemaining.contains(gw.getString())){
-                        // It's hidden
-                        gw.setHiddenFlag(true);
-                    }
-                    else {
-                        gw.setHiddenFlag(false);
-                    }
+                    // The letter corresponds to this word. We se the hidden flag appropriately.
+                    // It's hidden
+                    gw.setHiddenFlag(this.wordsRemaining.contains(gw.getString()));
                     affectedWords.add(gw);
                 }
             }
@@ -491,28 +448,18 @@ public class LetterGrid {
             if (code == Letter.PRESS_LONG){
 
                 // This was a hint request.
-                boolean wordsAdded = false;
+                this.lastSetOfAffectedWords.clear();
                 for (GridWord gw: affectedWords){
-                    if (!this.zeroPointWords.contains(gw.getString())){
-
-                        System.err.println("Adding '" + gw.toString() + "' to the zero score words");
-                        this.zeroPointWords.add(gw.getString());
-                        this.multiplier = 1;
-                        wordsAdded = true;
-
-                    }
+                    this.lastSetOfAffectedWords.add(gw.getString());
                 }
 
-                if (wordsAdded) return PRESS_ACTION_HINT;
-                else return PRESS_ACTION_NOTHING; // Same as not having pressed.
+                return PRESS_ACTION_HINT;
 
             }
             else {
                 // This was a short press. Dictionary definition request.
                 this.definitionRequests.clear();
-                for (GridWord gw: affectedWords){
-                    this.definitionRequests.add(gw);
-                }
+                this.definitionRequests.addAll(affectedWords);
                 return PRESS_ACTION_DEFINITION;
             }
 

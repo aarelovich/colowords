@@ -1,15 +1,13 @@
 package org.colowords;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.app.Activity;
-import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Window;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 public class MainActivity extends Activity {
 
@@ -104,12 +102,12 @@ public class MainActivity extends Activity {
         this.gameScreen.setLetters(this.crosswordGenerator.getLetterList());
         cwg.placeWords(this.crosswordGenerator.getGeneratedWordList());
 
+        HashMap< String,List<String> > intersectingWords = cwg.getWordIntersections();
+
         // Now we get the extra words.
         List<String> wordsUnableToPlace  = this.cwg.getWordsUnableToPlace();
         List<String> extraWords = this.crosswordGenerator.getExtraWords();
-        for (String s: wordsUnableToPlace){
-            extraWords.add(s);
-        }
+        extraWords.addAll(wordsUnableToPlace);
 
         this.gameScreen.setNewCrossWord(cwg,extraWords);
         System.err.println("SOLUTION");
