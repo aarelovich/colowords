@@ -34,8 +34,9 @@ public class Score {
         this.maximumPossibleScore = String.valueOf(scoreLogic.getMaximumPossibleScore());
         return highlightWord;
     }
-    public String updateScore(String foundWord) {
-        Scoring.GridWordFoundReturn gwf = this.scoreLogic.gridWordFound(foundWord);
+
+    public String updateScore(String foundWord, boolean hasHighlight) {
+        Scoring.GridWordFoundReturn gwf = this.scoreLogic.gridWordFound(foundWord,hasHighlight);
         this.score = String.valueOf(this.scoreLogic.getCurrentScore());
         return gwf.highlightWord;
     }

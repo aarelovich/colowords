@@ -37,7 +37,6 @@ public class GameScreen extends View implements Utils.AnimationInterface {
     private final NewGameListener newGameListener;
     private final Banner banner;
     private final RectF highScoreTextRect;
-    private int[] letterToHighLight;
     private final String appStateFile = "appstate.txt";
 
     TimerTask timerTaskObj = new TimerTask() {
@@ -66,8 +65,6 @@ public class GameScreen extends View implements Utils.AnimationInterface {
 
         this.letterGridGeometry = new Rect(x,y,x+w,y+h); // The geometry is necessary with every configuration.
         this.letterGrid = new LetterGrid();
-
-        this.letterToHighLight = new int[]{0,0,0};
 
         // Now the current word
         int verticalMargin = (int)(height*0.01f);
@@ -156,8 +153,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         this.extraIndicator.setNumber(extras.size(),extras.size());
         String highlightedWord = this.scoreIndicator.setScoreLogic(cwg,extras);
         this.newGameButton.setVisible(false);
-        int[] params = this.letterGrid.highlightWord(highlightedWord);
-        if (params != null) this.letterToHighLight = params;
+        this.letterGrid.setHighlightWord(highlightedWord);
         this.scoreIndicator.syncScore();
         this.storeState();
         this.invalidate();
@@ -360,12 +356,10 @@ public class GameScreen extends View implements Utils.AnimationInterface {
 
         // We now check if the word is in the puzzle.
         code = this.letterGrid.isItAWord(word);
-        if ((code == LetterGrid.WORD_EXTRA) || (code == LetterGrid.WORD_CROSS) || (code == LetterGrid.WORD_CROSS_NO_SCORE)){
+        if ((code == LetterGrid.WORD_EXTRA) || (code == LetterGrid.WORD_CROSS) || (code == LetterGrid.WORD_CROSS_HAS_HIGHLIGHT)){
 
             if (code == LetterGrid.WORD_EXTRA) this.banner.showBannerMessage(Banner.MESSAGE_TYPE_EXTRA_FOUND);
-            else if (code == LetterGrid.WORD_CROSS) this.banner.showBannerMessage(Banner.MESSAGE_TYPE_WORD_FOUND);
-            else this.banner.showBannerMessage(Banner.MESSAGE_TYPE_NEW_ZERO_POINT_WORD);;
-
+            else this.banner.showBannerMessage(Banner.MESSAGE_TYPE_WORD_FOUND);
 
             if (code == LetterGrid.WORD_EXTRA){
                 this.scoreIndicator.updateScoreExtra(word);
@@ -373,9 +367,9 @@ public class GameScreen extends View implements Utils.AnimationInterface {
             }
             else {
                 // Regular word found.
-                String hl_word = this.scoreIndicator.updateScore(word);
+                String hl_word = this.scoreIndicator.updateScore(word, (code == LetterGrid.WORD_CROSS_HAS_HIGHLIGHT));
                 if (!Objects.equals(hl_word, "")){
-                    this.letterToHighLight = this.letterGrid.highlightWord(hl_word);
+                    this.letterGrid.setHighlightWord(hl_word);
                 }
             }
 
@@ -429,13 +423,14 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         this.settingsButton.render(canvas);
 
         // The last thing we render is the highlight.
-        if (this.letterToHighLight != null){
+        int[] letterToHighLight = this.letterGrid.getTileToHighLight();
+        if (letterToHighLight != null){
 
             // This mimics the render drawing of a grid square.
 
-            int x = this.letterToHighLight[0];
-            int y = this.letterToHighLight[1];
-            int d = this.letterToHighLight[2];
+            int x = letterToHighLight[0];
+            int y = letterToHighLight[1];
+            int d = letterToHighLight[2];
             float R = d/2.0f;
             float r = R*0.3f;
             float strokeWidth = d*0.1f;
@@ -558,10 +553,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         if (parts.length > 1) {
             String hgWord = this.scoreIndicator.scoreLogic.restoreFromState(parts[1]);
             this.scoreIndicator.syncScore();
-            int[] params = this.letterGrid.highlightWord(hgWord);
-            if (params != null) {
-                this.letterToHighLight = params;
-            }
+            this.letterGrid.setHighlightWord(hgWord);
         }
 
         this.letterWheel.setLetters(forWheel);

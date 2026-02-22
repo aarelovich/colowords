@@ -15,6 +15,70 @@ import java.util.Objects;
 
 public class LetterGrid {
 
+    private static class HighlightTile {
+        private int x;
+        private int y;
+        private int d;
+        private int letterIndex;
+
+        public HighlightTile(){
+            this.reset();
+        }
+
+        public void reset() {
+            this.x = 0;
+            this.y = 0;
+            this.d = 0;
+            this.letterIndex = -1;
+        }
+
+        public void update(int x, int y, int d, int letterIndex){
+            this.x = x;
+            this.y = y;
+            this.d = d;
+            this.letterIndex = letterIndex;
+        }
+
+        public void restoreFromString(String s) {
+            String[] parts = s.split("\\|");
+            if (parts.length != 4) return;
+            this.x = Integer.parseInt(parts[0]);
+            this.y = Integer.parseInt(parts[1]);
+            this.d = Integer.parseInt(parts[2]);
+            this.letterIndex = Integer.parseInt(parts[3]);
+        }
+
+        public String getStoreString() {
+            return this.x + "|" + this.y + "|" + this.d + "|" + this.letterIndex;
+        }
+
+        public int[] getGeometry() {
+            return new int[] {this.x, this.y, this.d};
+        }
+
+        public int getD() {
+            return d;
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public int getLetterIndex() {
+            return letterIndex;
+        }
+
+        public boolean isValid() {
+            return (this.letterIndex >= 0);
+        }
+
+    }
+
+
     private int x;
     private int y;
     private int width;
@@ -30,6 +94,7 @@ public class LetterGrid {
     private List<String> extraWordsFound;
     private List<GridWord> definitionRequests;
     private List<String> lastSetOfAffectedWords;
+    private HighlightTile highlightTile;
     private int letterBeingPressed;
     private final int STATE_INDEX_LETTERS      = 0;
     private final int STATE_INDEX_GRIDWORDS    = 1;
@@ -38,7 +103,8 @@ public class LetterGrid {
     private final int STATE_INDEX_LETTER_WHEEL = 4;
     private final int STATE_INDEX_EXTRA_WORDS  = 5;
     private final int STATE_INDEX_EXTRA_FOUND  = 6;
-    private final int STATE_SIZE               = 7;
+    private final int STATE_INDEX_HIGHLIGHT    = 7;
+    private final int STATE_SIZE               = 8;
 
     public static final int PRESS_ACTION_NOTHING      = 0;
     public static final int PRESS_ACTION_HINT         = 1;
@@ -49,7 +115,7 @@ public class LetterGrid {
     public static final int WORD_EXTRA        = 1;
     public static final int WORD_CROSS       = 2;
     public static final int WORD_EXTRA_AGAIN = 3;
-    public static final int WORD_CROSS_NO_SCORE = 4;
+    public static final int WORD_CROSS_HAS_HIGHLIGHT = 4;
 
     public LetterGrid (){
         this.letters = new HashMap<>();
@@ -60,6 +126,7 @@ public class LetterGrid {
         this.extraWordsFound = new ArrayList<>();
         this.definitionRequests = new ArrayList<>();
         this.lastSetOfAffectedWords = new ArrayList<>();
+        this.highlightTile = new HighlightTile();
         this.letterBeingPressed = -1;
     }
 
@@ -67,9 +134,16 @@ public class LetterGrid {
         return this.lastSetOfAffectedWords;
     }
 
-    public int[] highlightWord(String word) {
+    public void setHighlightWord(String word) {
 
-        //System.err.println("HIGHLIGHT: Attempt to highlight: " + word);
+        System.err.println("HIGHLIGHT: Word: " + word);
+
+        if (this.highlightTile.isValid()){
+            // We must check if it's still hidden.
+            if (Objects.requireNonNull(this.letters.get(this.highlightTile.getLetterIndex())).isItHidden()){
+                return;
+            }
+        }
 
         for (GridWord gw: this.wordList) {
             if (gw.getString().equals(word)){
@@ -79,15 +153,18 @@ public class LetterGrid {
                 // We need to highlight the first letter.
                 if (!gps.isEmpty()) {
                     //System.err.println("      HIGHLIGHT AT POS: " + gps.get(0).toString());
-                    int indexOfFirstLetter = this.gridSize.toIndex(gps.get(0));
-
-                    return  Objects.requireNonNull(this.letters.get(indexOfFirstLetter)).getGeometry();
-
+                    // We need to search for the first tile that is HIDDEN.
+                    for (int i = 0; i < gps.size(); i++){
+                        int letterIndex = this.gridSize.toIndex(gps.get(i));
+                        if (Objects.requireNonNull(this.letters.get(letterIndex)).isItHidden()){
+                            int[] geometry = Objects.requireNonNull(this.letters.get(letterIndex)).getGeometry();
+                            this.highlightTile.update(geometry[0],geometry[1],geometry[2],letterIndex);
+                            return;
+                        }
+                    }
                 }
             }
         }
-
-        return null;
 
     }
 
@@ -95,6 +172,11 @@ public class LetterGrid {
         for (int i = 0; i < this.extraWordsFound.size(); i++){
             this.extraWordsFound.set(i,"1");
         }
+    }
+
+    public int[] getTileToHighLight() {
+        if (!this.highlightTile.isValid()) return null;
+        return this.highlightTile.getGeometry();
     }
 
     public List<GridWord> getDefinitionRequests(){
@@ -129,6 +211,7 @@ public class LetterGrid {
         state.set(STATE_INDEX_GRIDSIZE,this.gridSize.getStoreString());
         state.set(STATE_INDEX_EXTRA_WORDS,this.getStringToStoreFromList(this.extraWords));
         state.set(STATE_INDEX_EXTRA_FOUND,this.getStringToStoreFromList(this.extraWordsFound));
+        state.set(STATE_INDEX_HIGHLIGHT,this.highlightTile.getStoreString());
 
         return String.join(">",state);
 
@@ -221,6 +304,9 @@ public class LetterGrid {
             ans.add(s);
         }
 
+        // Restore the highlight tile.
+        this.highlightTile.restoreFromString(parts[STATE_INDEX_HIGHLIGHT]);
+
         System.err.println("Restoring State. Remaining words: " + this.wordsRemaining);
         List<String> found = new ArrayList<>();
         List<String> notfound = new ArrayList<>();
@@ -279,6 +365,7 @@ public class LetterGrid {
         this.wordsRemaining.clear();
         this.extraWords.clear();
         this.extraWordsFound.clear();
+        this.highlightTile.reset();
 
         // We add the extra words.
         for (String ew: extraWords){
@@ -357,15 +444,20 @@ public class LetterGrid {
         System.err.println("Checking For Word Fig: " + word);
 
         if (this.wordsRemaining.contains(word)){
+
             for (GridWord gw: this.wordList){
 
                 if (gw.getString().equals(word)){
                     // We got one.
 
                     // We now reveal all the letters.
+                    boolean containsHighlight = false;
                     for (GridPoint l : gw.toGridPointList()){
 
                         int index = gridSize.toIndex(l);
+                        if (index == this.highlightTile.letterIndex){
+                            containsHighlight = true;
+                        }
                         // System.err.println("Revealing letter at " + l.toString() + " - " + index + " for word: " + gw.toString());
                         Objects.requireNonNull(this.letters.get(index)).revealLetter();
 
@@ -374,6 +466,7 @@ public class LetterGrid {
                     // We remove the word from the list.
                     int index = wordsRemaining.indexOf(word);
                     if (index != -1) wordsRemaining.remove(index);
+                    if (containsHighlight) return WORD_CROSS_HAS_HIGHLIGHT;
                     return WORD_CROSS;
 
                 }

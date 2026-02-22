@@ -166,7 +166,7 @@ public class Scoring {
         this.maximumPossibleScore = ComputeMaximumPossibleScore(intersectingWords, extraWords);
     }
 
-    public GridWordFoundReturn gridWordFound(String foundWord) {
+    public GridWordFoundReturn gridWordFound(String foundWord, boolean hasHighlight) {
 
         GridWordFoundReturn gwr = new GridWordFoundReturn();
 
@@ -175,14 +175,18 @@ public class Scoring {
         }
 
         int highligthMultiplier = 1;
-        if (Objects.equals(foundWord, this.currentHighlightedWord)){
+        boolean removeWordFromHighligthList = true;
+        if (hasHighlight){
             highligthMultiplier = Ms;
-            this.getNextHighlightWord();
+            if (Objects.equals(foundWord, this.currentHighlightedWord)) {
+                this.getNextHighlightWord();
+                removeWordFromHighligthList = false;
+            }
         }
-        else {
-            // We need to remove it from the list
-            this.highlightWordList.remove(foundWord);
-        }
+
+        // We need to remove it from the list, unless it WAS the highlighted word.
+        if (removeWordFromHighligthList) this.highlightWordList.remove(foundWord);
+
 
         // We search for the word in the score list.
         ScoreWord sw = this.scoreData.get(foundWord);
@@ -234,7 +238,7 @@ public class Scoring {
 
         while (true) {
 
-            GridWordFoundReturn gwr = this.gridWordFound(this.currentHighlightedWord);
+            GridWordFoundReturn gwr = this.gridWordFound(this.currentHighlightedWord,true);
             if (Objects.equals(gwr.highlightWord, "")) break;
         }
 

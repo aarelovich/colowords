@@ -58,6 +58,10 @@ public class Letter {
         return new Rect(this.x-R,this.y-R,this.x+R,this.y+R);
     }
 
+    public boolean isItHidden() {
+        return (this.letterState != LETTER_STATE_REVEALED);
+    }
+
     public Letter (String letterState){
         String[] parts = letterState.split("\\|");
 
