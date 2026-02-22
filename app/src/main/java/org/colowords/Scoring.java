@@ -147,6 +147,7 @@ public class Scoring {
 
         this.scoreData.clear();
         this.highlightWordList.clear();
+        System.err.println("Setting current score to zero");
         this.currentScore = 0;
 
         for (String word : intersectingWords.keySet()) {
@@ -177,6 +178,10 @@ public class Scoring {
         if (Objects.equals(foundWord, this.currentHighlightedWord)){
             highligthMultiplier = Ms;
             this.getNextHighlightWord();
+        }
+        else {
+            // We need to remove it from the list
+            this.highlightWordList.remove(foundWord);
         }
 
         // We search for the word in the score list.

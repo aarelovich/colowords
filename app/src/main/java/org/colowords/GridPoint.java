@@ -22,6 +22,10 @@ public class GridPoint {
       character = ch;
    }
 
+   public boolean isRowColumn(int r, int c){
+      return (this.r == r && this.c == c);
+   }
+
    public boolean isValid(){
       return (this.r >= 0) && (this.c >= 0);
    }

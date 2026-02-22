@@ -2,13 +2,10 @@ package org.colowords;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.res.AssetManager;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
-import android.graphics.Typeface;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -25,22 +22,21 @@ import java.util.TimerTask;
 
 public class GameScreen extends View implements Utils.AnimationInterface {
 
-    private LetterWheel letterWheel;
-    private LetterGrid letterGrid;
-    private CurrentWord currentWord;
-    private ExtraWordIndicator extraIndicator;
-    private CircleDropDown difficulty;
-    private CircleDropDown langSelector;
-    private Button newGameButton;
-    private Score scoreIndicator;
-    private SettingsButton settingsButton;
-    private SettingsScreen settings;
-    private Rect letterGridGeometry;
-    private Timer animationTimer;
-    private List<Integer> animationRequests;
-    private NewGameListener newGameListener;
-    private Banner banner;
-    private RectF highScoreTextRect;
+    private final LetterWheel letterWheel;
+    private final LetterGrid letterGrid;
+    private final CurrentWord currentWord;
+    private final ExtraWordIndicator extraIndicator;
+    private final CircleDropDown difficulty;
+    private final CircleDropDown langSelector;
+    private final Button newGameButton;
+    private final Score scoreIndicator;
+    private final SettingsButton settingsButton;
+    private final SettingsScreen settings;
+    private final Rect letterGridGeometry;
+    private final List<Integer> animationRequests;
+    private final NewGameListener newGameListener;
+    private final Banner banner;
+    private final RectF highScoreTextRect;
     private int[] letterToHighLight;
     private final String appStateFile = "appstate.txt";
 
@@ -103,7 +99,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         this.scoreIndicator = new Score(t,l,w,h,this);
 
         // WE get the animation timer running.
-        this.animationTimer = new Timer();
+        Timer animationTimer = new Timer();
         animationTimer.schedule(timerTaskObj, 0, Utils.ANIMATION_TICK_LENGTH);
 
         // Adding the difficulty selector
@@ -116,7 +112,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         this.difficulty.addOptions("7");
         this.difficulty.setCurrentOption(Preferences.GetPreference(getContext(),Preferences.KEY_DIFFICULTY));
 
-        float topMargin = y - d/2;
+        float topMargin = y - (float) d /2;
 
         // Adding the language selection.
         d = (int)(width*0.13);
@@ -124,7 +120,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         y = (int)(height*0.05);
         this.langSelector = new CircleDropDown(x,y,d);
         this.langSelector.addOptions("EN");
-        //this.langSelector.addOptions("ES"); // We are removing spanish for now.
+        this.langSelector.addOptions("ES");
         this.langSelector.setCurrentOption(Preferences.GetPreference(getContext(),Preferences.KEY_LANGUAGE));
 
         // The new game button.
@@ -162,7 +158,9 @@ public class GameScreen extends View implements Utils.AnimationInterface {
         this.newGameButton.setVisible(false);
         int[] params = this.letterGrid.highlightWord(highlightedWord);
         if (params != null) this.letterToHighLight = params;
+        this.scoreIndicator.syncScore();
         this.storeState();
+        this.invalidate();
     }
 
     public void setLetters(ArrayList<String> letters){
@@ -261,7 +259,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
                 ConfirmationDialog.Show(getContext(), "Reset High Score", "Selecting YES will set the highest \nDo you want to proceed", new ConfirmationDialog.OnOptionSelectedListener() {
                     @Override
                     public void onYesSelected() {
-                        Preferences.Save(getContext(),Preferences.KEY_MAX_SCORE,"0");
+                        Preferences.SaveAsInt(getContext(),Preferences.KEY_MAX_SCORE,0);
                     }
 
                     @Override
@@ -390,7 +388,7 @@ public class GameScreen extends View implements Utils.AnimationInterface {
                 int highestStoredScore = Preferences.GetAsInt(getContext(),Preferences.KEY_MAX_SCORE);
                 int currentScore = this.scoreIndicator.scoreLogic.getCurrentScore();
                 if (currentScore > highestStoredScore){
-                    Preferences.Save(getContext(),Preferences.KEY_MAX_SCORE,String.valueOf(currentScore));
+                    Preferences.SaveAsInt(getContext(),Preferences.KEY_MAX_SCORE,currentScore);
                 }
 
                 this.letterGrid.markAllExtrasAsFound();

@@ -107,6 +107,14 @@ public class GridWord {
       this.column = c;
    }
 
+   public boolean doesWordPassOnGridPoint(int r, int c) {
+      List<GridPoint> gps = this.toGridPointList();
+      for (GridPoint gp: gps) {
+         if (gp.isRowColumn(r, c)) return true;
+      }
+      return false;
+   }
+
    public void setOrientation(boolean horizontal){
       this.horizontal = horizontal;
    }

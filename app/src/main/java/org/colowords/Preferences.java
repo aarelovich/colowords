@@ -36,11 +36,25 @@ public class Preferences {
 
     public static int GetAsInt(Context context, String key){
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getInt(key, -1);
+        try {
+            return sharedPreferences.getInt(key, -1);
+        } catch (ClassCastException e) {
+            // If it was stored as a String, try to parse it
+            String value = sharedPreferences.getString(key, null);
+            if (value != null) {
+                try {
+                    return Integer.parseInt(value);
+                } catch (NumberFormatException nfe) {
+                    return -1;
+                }
+            }
+            return -1;
+        }
     }
 
     public static void ClearPreferences(Context context){
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
 
         List<String> allPreferences = new ArrayList<>();
         allPreferences.add(KEY_LANGUAGE);
@@ -52,16 +66,23 @@ public class Preferences {
         allPreferences.add(KEY_MAX_SCORE);
 
         for (String key: allPreferences){
-            if (sharedPreferences.contains(key)){
-                sharedPreferences.edit().remove(key);
-            }
+            editor.remove(key);
         }
+        editor.apply();
     }
 
     // Retrieve values from SharedPreferences
     public static String GetPreference(Context context, String key) {
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        return sharedPreferences.getString(key, "");
+        try {
+            return sharedPreferences.getString(key, "");
+        } catch (ClassCastException e) {
+            // If it was stored as an int, convert to String
+            if (sharedPreferences.contains(key)) {
+                return String.valueOf(sharedPreferences.getInt(key, 0));
+            }
+            return "";
+        }
     }
 
 }

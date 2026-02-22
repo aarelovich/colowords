@@ -80,6 +80,7 @@ public class LetterGrid {
                 if (!gps.isEmpty()) {
                     //System.err.println("      HIGHLIGHT AT POS: " + gps.get(0).toString());
                     int indexOfFirstLetter = this.gridSize.toIndex(gps.get(0));
+
                     return  Objects.requireNonNull(this.letters.get(indexOfFirstLetter)).getGeometry();
 
                 }

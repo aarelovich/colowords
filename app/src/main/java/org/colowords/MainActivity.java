@@ -4,10 +4,10 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.view.Window;
+import android.view.WindowManager;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 public class MainActivity extends Activity {
 
@@ -22,6 +22,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // I use the device resolution for everything, so I get it first.
         // Then I use it for the game screen.

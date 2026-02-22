@@ -1,0 +1,149 @@
+Scoring rules.
+
+There are three types of words
+1) Highlighted words
+2) Hidden words
+3) Regular words (on the actual cross word grid).
+
+There are two types of hints:
+Long press on a square reveals the square letter
+Short press on a square shows definition.
+
+A word base score is
+(Number of letters hidden)*N // Make numbers a bit higher N should be 2 or 3.
+
+For words of type 1)
+Get an x3 multiplier. (Called Highlight Multiplier or Ms)
+
+For words of type 2
+Get an x2 multiplier  (Called Hidden Multiplier or Mh)
+
+For words of type 3
+Get a multiplier. x3 (Called No hint Multiplier or Mn)
+
+Hints decrease the multiplier value.
+Requesting a letter for the word sets Mn to 1.
+Requesting a definition for the word sets Mn to 2.
+
+Some definitions.
+1) Hidden words: Words that can be formed with the letter but are not on the grid.
+
+2) Highlighted words: Words that are on the grid, have not been discovered yet. The game will highlight a single square (can be an intersection square thereby creating TWO highlighted words). Once the square is filled (By getting the word right), the highlight moves on to another random empty square. Revealing the letter in the square does not affect anything other than Mn penlization
+
+Some rules.
+-> Mn is the only multiplier that is penalized.
+-> Mn cannot go back up and is per word.
+-> If a hint is used on square shared by two words, both words get the penilization
+-> Asking for definition AFTER having revelaed a letter has no effect.
+
+Scoring Class Required Function.
+
+I need to think the interface.
+
+Long Press Interface.
+When I long press I reveal a letter of one or two words. -> Those words get a base decrease. -> Mn for those words is set to 2 is set to 1.
+
+Short press interface.
+When I press I request a definition of one or two words. -> Mn for those words is set to 2.
+
+
+For scoring purposes what I need the list of words and what words interecept witht it.
+So when a word is found all words that intercept with it get a base reduction of one.
+
+
+Starting Word: 'SPACE'. At (25,22)
+
+    PLACED. Word 'CAPE' will intersect with SPACE @(25,22) |.
+    PLACED. Word 'CASE' will intersect with SPACE @(25,22) |.
+    PLACED. Word 'PACE' will intersect with SPACE @(25,22) |.
+    PLACED. Word 'SEA' will intersect with SPACE @(25,22) |.
+    PLACED. Word 'SEC' will intersect with CAPE @(28,22) --.
+    PLACED. Word 'CAP' will intersect with PACE @(29,19) --.
+
+
+CAPE -> SPACE
+CASE -> SPACE
+PACE -> SPACE
+SEA  -> SPACE
+SEC  -> CAPE
+CAP  -> PACE
+
+   | 0 | 1 | 2 | 3 | 4 | 5 | 6 |
+--------------------------------
+ 0 |   | C | A | S | E |   |   |
+--------------------------------
+ 1 |   |   |   | P |   |   |   |
+--------------------------------
+ 2 |   | S | E | A |   |   | S |
+--------------------------------
+ 3 |   |   |   | C | A | P | E |
+--------------------------------
+ 4 | P | A | C | E |   |   | C |
+--------------------------------
+ 5 |   |   | A |   |   |   |   |
+--------------------------------
+ 6 |   |   | P |   |   |   |   |
+--------------------------------
+
+Starting Word: 'STEADY'. At (22,25)
+STEADY
+W      PLACED. Word 'STAYED' will intersect with STEADY @(22,25) --.
+
+STEADY -> STAYED
+STAYED -> STEADY
+
+W      PLACED. Word 'SEAT' will intersect with STEADY @(22,25) --.
+
+
+STEADY -> STAYED,SEAT
+STAYED -> STEADY
+SEAT   -> STEADY
+
+W      PLACED. Word 'DATE' will intersect with STEADY @(22,25) --.
+
+STEADY -> STAYED,SEAT,DATE
+STAYED -> STEADY
+SEAT   -> STEADY
+DATE   -> STEADY
+
+W      PLACED. Word 'DAYS' will intersect with STAYED @(22,25) |.
+W      PLACED. Word 'EAST' will intersect with STAYED @(22,25) |.
+W      PLACED. Word 'SET' will intersect with DATE @(22,29) |.
+W      PLACED. Word 'TEA' will intersect with SET @(25,28) --.
+W      PLACED. Word 'DAY' will intersect with STEADY @(22,25) --.
+W      PLACED. Word 'YEA' will intersect with DAYS @(27,25) --.
+W      PLACED. Word 'ATE' will intersect with STAYED @(22,25) |.
+W      PLACED. Word 'SAD' will intersect with DAY @(20,30) |.
+W      PLACED. Word 'SAT' will intersect with YEA @(27,27) |.
+W      PLACED. Word 'SAY' will intersect with ATE @(26,23) --.
+
+W  Finished Placing. Unable to place the following words: [YET]
+
+
+2026-02-21 14:40:50.202 28343-28343 System.err              org.colowords                        W  SAVED STATE
+2026-02-21 14:40:50.202 28343-28343 System.err              org.colowords                        W  SOLUTION
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W     | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   0 |   |   |   |   |   | S | A | D |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   1 |   |   |   |   | S |   |   | A |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   2 |   |   | S | T | E | A | D | Y |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   3 |   |   | T |   | A |   | A |   |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   4 |   | E | A | S | T |   | T |   |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   5 | S |   | Y |   |   | S | E | T |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   6 | A | T | E |   |   |   |   | E |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   7 | Y |   | D | A | Y | S |   | A |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   8 |   |   |   |   | E |   |   |   |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W   9 |   |   |   | S | A | T |   |   |
+2026-02-21 14:40:50.205 28343-28343 System.err              org.colowords                        W  ------------------------------------
+
+
+
